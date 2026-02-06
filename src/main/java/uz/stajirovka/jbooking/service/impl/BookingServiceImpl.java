@@ -29,6 +29,7 @@ public class BookingServiceImpl implements BookingService {
     private final RoomRepository roomRepository;
     private final BookingMapper bookingMapper;
 
+    // создание нового бронирования
     @Override
     @Transactional
     public BookingResponse create(BookingCreateRequest request) {
@@ -60,17 +61,20 @@ public class BookingServiceImpl implements BookingService {
         return bookingMapper.toResponse(bookingRepository.save(entity));
     }
 
+    // получение бронирования по идентификатору
     @Override
     public BookingResponse getById(Long id) {
         return bookingMapper.toResponse(findById(id));
     }
 
+    // получение всех бронирований с пагинацией
     @Override
     public Slice<BookingResponse> getAll(Pageable pageable) {
         return bookingRepository.findAllBy(pageable)
             .map(bookingMapper::toResponse);
     }
 
+    // подтверждение бронирования
     @Override
     @Transactional
     public BookingResponse confirm(Long id) {
@@ -86,6 +90,7 @@ public class BookingServiceImpl implements BookingService {
         return bookingMapper.toResponse(entity);
     }
 
+    // отмена бронирования
     @Override
     @Transactional
     public BookingResponse cancel(Long id) {
@@ -100,6 +105,7 @@ public class BookingServiceImpl implements BookingService {
         return bookingMapper.toResponse(entity);
     }
 
+    // удаление бронирования по идентификатору
     @Override
     @Transactional
     public void delete(Long id) {
@@ -107,11 +113,13 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.deleteById(id);
     }
 
+    // поиск бронирования по идентификатору или выброс исключения
     private BookingEntity findById(Long id) {
         return bookingRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Booking", id));
     }
 
+    // поиск комнаты по идентификатору или выброс исключения
     private RoomEntity findRoomById(Long id) {
         return roomRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Room", id));

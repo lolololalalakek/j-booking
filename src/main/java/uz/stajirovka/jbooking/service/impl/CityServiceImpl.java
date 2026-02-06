@@ -21,6 +21,7 @@ public class CityServiceImpl implements CityService {
     private final CityRepository cityRepository;
     private final CityMapper cityMapper;
 
+    // создание нового города
     @Override
     @Transactional
     public CityResponse create(CityCreateRequest request) {
@@ -28,17 +29,20 @@ public class CityServiceImpl implements CityService {
         return cityMapper.toResponse(cityRepository.save(entity));
     }
 
+    // получение города по идентификатору
     @Override
     public CityResponse getById(Long id) {
         return cityMapper.toResponse(findById(id));
     }
 
+    // получение всех городов с пагинацией
     @Override
     public Slice<CityResponse> getAll(Pageable pageable) {
         return cityRepository.findAllBy(pageable)
                 .map(cityMapper::toResponse);
     }
 
+    // обновление данных города
     @Override
     @Transactional
     public CityResponse update(Long id, CityCreateRequest request) {
@@ -48,6 +52,7 @@ public class CityServiceImpl implements CityService {
         return cityMapper.toResponse(entity);
     }
 
+    // удаление города по идентификатору
     @Override
     @Transactional
     public void delete(Long id) {
@@ -55,6 +60,7 @@ public class CityServiceImpl implements CityService {
         cityRepository.deleteById(id);
     }
 
+    // поиск города по идентификатору или выброс исключения
     private CityEntity findById(Long id) {
         return cityRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("City", id));

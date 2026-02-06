@@ -24,6 +24,7 @@ public class RoomServiceImpl implements RoomService {
     private final HotelRepository hotelRepository;
     private final RoomMapper roomMapper;
 
+    // создание новой комнаты
     @Override
     @Transactional
     public RoomResponse create(RoomCreateRequest request) {
@@ -34,23 +35,27 @@ public class RoomServiceImpl implements RoomService {
         return roomMapper.toResponse(roomRepository.save(entity));
     }
 
+    // получение комнаты по идентификатору
     @Override
     public RoomResponse getById(Long id) {
         return roomMapper.toResponse(findById(id));
     }
 
+    // получение всех комнат с пагинацией
     @Override
     public Slice<RoomResponse> getAll(Pageable pageable) {
         return roomRepository.findAllBy(pageable)
                 .map(roomMapper::toResponse);
     }
 
+    // получение комнат по идентификатору отеля
     @Override
     public Slice<RoomResponse> getByHotelId(Long hotelId, Pageable pageable) {
         return roomRepository.findByHotelId(hotelId, pageable)
                 .map(roomMapper::toResponse);
     }
 
+    // обновление данных комнаты
     @Override
     @Transactional
     public RoomResponse update(Long id, RoomCreateRequest request) {
@@ -59,12 +64,16 @@ public class RoomServiceImpl implements RoomService {
 
         entity.setHotel(hotel);
         entity.setRoomNumber(request.roomNumber());
+        entity.setRoomType(request.roomType());
+        entity.setMealPlan(request.mealPlan());
+        entity.setAmenities(request.amenities());
         entity.setCapacity(request.capacity());
         entity.setPricePerNight(request.pricePerNight());
         entity.setDescription(request.description());
         return roomMapper.toResponse(entity);
     }
 
+    // удаление комнаты по идентификатору
     @Override
     @Transactional
     public void delete(Long id) {
@@ -72,11 +81,13 @@ public class RoomServiceImpl implements RoomService {
         roomRepository.deleteById(id);
     }
 
+    // поиск комнаты по идентификатору или выброс исключения
     private RoomEntity findById(Long id) {
         return roomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Room", id));
     }
 
+    // поиск отеля по идентификатору или выброс исключения
     private HotelEntity findHotelById(Long id) {
         return hotelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel", id));

@@ -24,6 +24,7 @@ public class HotelServiceImpl implements HotelService {
     private final CityRepository cityRepository;
     private final HotelMapper hotelMapper;
 
+    // создание нового отеля
     @Override
     @Transactional
     public HotelResponse create(HotelCreateRequest request) {
@@ -34,23 +35,27 @@ public class HotelServiceImpl implements HotelService {
         return hotelMapper.toResponse(hotelRepository.save(entity));
     }
 
+    // получение отеля по идентификатору
     @Override
     public HotelResponse getById(Long id) {
         return hotelMapper.toResponse(findById(id));
     }
 
+    // получение всех отелей с пагинацией
     @Override
     public Slice<HotelResponse> getAll(Pageable pageable) {
         return hotelRepository.findAllBy(pageable)
                 .map(hotelMapper::toResponse);
     }
 
+    // получение отелей по идентификатору города
     @Override
     public Slice<HotelResponse> getByCityId(Long cityId, Pageable pageable) {
         return hotelRepository.findByCityId(cityId, pageable)
                 .map(hotelMapper::toResponse);
     }
 
+    // обновление данных отеля
     @Override
     @Transactional
     public HotelResponse update(Long id, HotelCreateRequest request) {
@@ -66,6 +71,7 @@ public class HotelServiceImpl implements HotelService {
         return hotelMapper.toResponse(entity);
     }
 
+    // удаление отеля по идентификатору
     @Override
     @Transactional
     public void delete(Long id) {
@@ -73,11 +79,13 @@ public class HotelServiceImpl implements HotelService {
         hotelRepository.deleteById(id);
     }
 
+    // поиск отеля по идентификатору или выброс исключения
     private HotelEntity findById(Long id) {
         return hotelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel", id));
     }
 
+    // поиск города по идентификатору или выброс исключения
     private CityEntity findCityById(Long id) {
         return cityRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("City", id));

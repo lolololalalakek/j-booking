@@ -1,9 +1,9 @@
 package uz.stajirovka.jbooking.constant.enums;
 
 public enum BookingStatus {
-    HOLD,
-    CONFIRMED,
-    PAID,
-    CANCELLED,
-    MODIFIED
+    HOLD,      // ожидание
+    CONFIRMED, // подтверждено
+    PAID,      // оплачено
+    CANCELLED, // отменено
+    MODIFIED   // изменено
 }
