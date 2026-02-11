@@ -14,9 +14,16 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import uz.stajirovka.jbooking.dto.request.BookingConfirmRequest;
 import uz.stajirovka.jbooking.dto.request.BookingCreateRequest;
+import uz.stajirovka.jbooking.dto.request.BookingModifyRequest;
+import uz.stajirovka.jbooking.dto.response.BookingConfirmResponse;
 import uz.stajirovka.jbooking.dto.response.BookingResponse;
 import uz.stajirovka.jbooking.service.BookingService;
+import uz.stajirovka.jbooking.service.BookingStatusService;
+
+import java.math.BigDecimal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/bookings")
@@ -24,11 +31,21 @@ import uz.stajirovka.jbooking.service.BookingService;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final BookingStatusService bookingStatusService;
 
     @PostMapping
     public ResponseEntity<BookingResponse> create(@Valid @RequestBody BookingCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(bookingService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(bookingService.initBooking(request));
     }
+
+
+    @PostMapping("/confirm")
+    public ResponseEntity<BookingConfirmResponse> confirmBooking(@Valid @RequestBody BookingConfirmRequest request) {
+        return  ResponseEntity.status(HttpStatus.OK)
+            .body(bookingService.confirmBooking(request));
+    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<BookingResponse> getById(@PathVariable Long id) {
@@ -40,19 +57,37 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getAll(pageable));
     }
 
-    @PutMapping("/{id}/confirm")
-    public ResponseEntity<BookingResponse> confirm(@PathVariable Long id) {
-        return ResponseEntity.ok(bookingService.confirm(id));
-    }
 
     @PutMapping("/{id}/cancel")
     public ResponseEntity<BookingResponse> cancel(@PathVariable Long id) {
-        return ResponseEntity.ok(bookingService.cancel(id));
+        return ResponseEntity.ok(bookingStatusService.cancel(id));
+    }
+
+    @PutMapping("/{id}/modify")
+    public ResponseEntity<BookingResponse> modify(
+        @PathVariable Long id, @Valid @RequestBody BookingModifyRequest request) {
+        return ResponseEntity.ok(bookingStatusService.modify(id, request));
+    }
+
+    @GetMapping("/{id}/refund-info")
+    public ResponseEntity<Map<String, Object>> getRefundInfo(@PathVariable Long id) {
+        BigDecimal amount = bookingStatusService.getRefundAmount(id);
+        int percent = bookingStatusService.getRefundPercent(id);
+        return ResponseEntity.ok(Map.of(
+            "refundAmount", amount,
+            "refundPercent", percent
+        ));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         bookingService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/by-guest/{guestId}")
+    public ResponseEntity<Slice<BookingResponse>> getByGuestId(
+        @PathVariable Long guestId, Pageable pageable) {
+        return ResponseEntity.ok(bookingService.getByGuestId(guestId, pageable));
     }
 }

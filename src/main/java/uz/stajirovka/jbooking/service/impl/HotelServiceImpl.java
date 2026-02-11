@@ -5,15 +5,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.stajirovka.jbooking.constant.enums.Error;
 import uz.stajirovka.jbooking.dto.request.HotelCreateRequest;
 import uz.stajirovka.jbooking.dto.response.HotelResponse;
 import uz.stajirovka.jbooking.entity.CityEntity;
 import uz.stajirovka.jbooking.entity.HotelEntity;
-import uz.stajirovka.jbooking.exception.ResourceNotFoundException;
+import uz.stajirovka.jbooking.exception.ConflictException;
+import uz.stajirovka.jbooking.exception.NotFoundException;
 import uz.stajirovka.jbooking.mapper.HotelMapper;
 import uz.stajirovka.jbooking.repository.CityRepository;
 import uz.stajirovka.jbooking.repository.HotelRepository;
+import uz.stajirovka.jbooking.repository.RoomRepository;
 import uz.stajirovka.jbooking.service.HotelService;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +27,7 @@ public class HotelServiceImpl implements HotelService {
 
     private final HotelRepository hotelRepository;
     private final CityRepository cityRepository;
+    private final RoomRepository roomRepository;
     private final HotelMapper hotelMapper;
 
     // создание нового отеля
@@ -32,6 +38,9 @@ public class HotelServiceImpl implements HotelService {
 
         HotelEntity entity = hotelMapper.toEntity(request);
         entity.setCity(city);
+        LocalDateTime now = LocalDateTime.now();
+        entity.setCreatedAt(now);
+        entity.setUpdatedAt(now);
         return hotelMapper.toResponse(hotelRepository.save(entity));
     }
 
@@ -67,27 +76,33 @@ public class HotelServiceImpl implements HotelService {
         entity.setDescription(request.description());
         entity.setStars(request.stars());
         entity.setAccommodationType(request.accommodationType());
-        entity.setBrand(request.brand());
+        entity.setUpdatedAt(LocalDateTime.now());
         return hotelMapper.toResponse(entity);
     }
 
-    // удаление отеля по идентификатору
+    // мягкое удаление отеля по идентификатору
     @Override
     @Transactional
     public void delete(Long id) {
-        findById(id);
-        hotelRepository.deleteById(id);
+        HotelEntity entity = findById(id);
+
+        // проверяем наличие активных номеров
+        if (roomRepository.existsByHotelId(id)) {
+            throw new ConflictException(Error.HOTEL_HAS_ROOMS);
+        }
+
+        entity.setDeletedAt(LocalDateTime.now());
     }
 
     // поиск отеля по идентификатору или выброс исключения
     private HotelEntity findById(Long id) {
         return hotelRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Hotel", id));
+                .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "id=" + id));
     }
 
     // поиск города по идентификатору или выброс исключения
     private CityEntity findCityById(Long id) {
         return cityRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("City", id));
+                .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "id=" + id));
     }
 }

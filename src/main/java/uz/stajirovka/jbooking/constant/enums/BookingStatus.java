@@ -5,5 +5,14 @@ public enum BookingStatus {
     CONFIRMED, // подтверждено
     PAID,      // оплачено
     CANCELLED, // отменено
-    MODIFIED   // изменено
+    MODIFIED; // изменено
+
+
+    public static BookingStatus fromTransactionStatus(TransactionStatus transactionStatus) {
+        if (transactionStatus == TransactionStatus.COMPLETED) {
+            return BookingStatus.PAID;
+        } else {
+            return BookingStatus.HOLD;
+        }
+    }
 }

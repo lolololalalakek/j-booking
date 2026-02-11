@@ -1,10 +1,14 @@
 package uz.stajirovka.jbooking.dto;
 
-import java.time.LocalDateTime;
+import lombok.Builder;
+import uz.stajirovka.jbooking.constant.enums.ErrorType;
 
+import java.util.List;
+
+@Builder
 public record ErrorDto(
-        int status,
+        int code,
         String message,
-        LocalDateTime timestamp
-) {
-}
+        ErrorType type,
+        List<String> validationErrors
+) {}

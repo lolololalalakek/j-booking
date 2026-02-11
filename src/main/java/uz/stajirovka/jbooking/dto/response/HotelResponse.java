@@ -8,8 +8,7 @@ public record HotelResponse(
         String cityName,
         String name,
         String description,
-        Double stars,
-        AccommodationType accommodationType,
-        String brand
+        Integer stars,
+        AccommodationType accommodationType
 ) {
 }

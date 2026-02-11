@@ -4,10 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 
 public record CityCreateRequest(
 
-    @NotBlank(message = "Name of city is required")
+    @NotBlank(message = "Название города обязательно")
     String name,
 
-    @NotBlank
+    @NotBlank(message = "Страна обязательна")
     String country
 ) {
 }

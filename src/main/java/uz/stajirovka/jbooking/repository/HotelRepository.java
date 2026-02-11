@@ -10,4 +10,7 @@ public interface HotelRepository extends JpaRepository<HotelEntity, Long> {
     Slice<HotelEntity> findAllBy(Pageable pageable);
 
     Slice<HotelEntity> findByCityId(Long cityId, Pageable pageable);
+
+    // проверка наличия активных отелей в городе
+    boolean existsByCityId(Long cityId);
 }

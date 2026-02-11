@@ -1,16 +1,7 @@
 package uz.stajirovka.jbooking.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import org.hibernate.annotations.SQLRestriction;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,13 +9,17 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.BatchSize;
 import uz.stajirovka.jbooking.constant.enums.BookingStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "bookings")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -41,17 +36,19 @@ public class BookingEntity {
     @JoinColumn(name = "room_id", nullable = false)
     RoomEntity room;
 
-    @Column(name = "guest_first_name", nullable = false)
-    String guestFirstName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "guest_id", nullable = false)
+    GuestEntity guest;
 
-    @Column(name = "guest_last_name", nullable = false)
-    String guestLastName;
-
-    @Column(name = "guest_email")
-    String guestEmail;
-
-    @Column(name = "number_of_guests", nullable = false)
-    Integer numberOfGuests;
+    @ManyToMany
+    @JoinTable(
+        name = "booking_additional_guests",
+        joinColumns = @JoinColumn(name = "booking_id"),
+        inverseJoinColumns = @JoinColumn(name = "guest_id")
+    )
+    @BatchSize(size = 20)
+    @Builder.Default
+    Set<GuestEntity> additionalGuests = new HashSet<>();
 
     @Column(name = "check_in_date", nullable = false)
     LocalDateTime checkInDate;
@@ -71,4 +68,7 @@ public class BookingEntity {
 
     @Column(name = "updated_at", nullable = false)
     LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    LocalDateTime deletedAt;
 }

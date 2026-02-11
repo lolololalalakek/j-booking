@@ -3,6 +3,9 @@ plugins {
     id 'org.springframework.boot' version '4.0.2'
     id 'io.spring.dependency-management' version '1.1.7'
 }
+ext {
+    springCloudVersion = "2025.1.0"
+}
 
 group = 'uz.stajirovka'
 version = '0.0.1-SNAPSHOT'
@@ -32,6 +35,7 @@ dependencies {
 
     // Mapper
     implementation 'org.mapstruct:mapstruct:1.6.3'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
@@ -58,6 +62,11 @@ dependencies {
 
     // Testing
     testImplementation 'com.h2database:h2'
+}
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"
+    }
 }
 
 tasks.named('test') {

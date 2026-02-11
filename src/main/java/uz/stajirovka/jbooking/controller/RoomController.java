@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uz.stajirovka.jbooking.dto.request.RoomCreateRequest;
+import uz.stajirovka.jbooking.dto.request.RoomSearchRequest;
 import uz.stajirovka.jbooking.dto.response.RoomResponse;
+import uz.stajirovka.jbooking.service.RoomSearchService;
 import uz.stajirovka.jbooking.service.RoomService;
 
 @RestController
@@ -24,6 +26,7 @@ import uz.stajirovka.jbooking.service.RoomService;
 public class RoomController {
 
     private final RoomService roomService;
+    private final RoomSearchService roomSearchService;
 
     @PostMapping
     public ResponseEntity<RoomResponse> create(@Valid @RequestBody RoomCreateRequest request) {
@@ -38,6 +41,12 @@ public class RoomController {
     @GetMapping
     public ResponseEntity<Slice<RoomResponse>> getAll(Pageable pageable) {
         return ResponseEntity.ok(roomService.getAll(pageable));
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<Slice<RoomResponse>> search(
+            @Valid @RequestBody RoomSearchRequest request, Pageable pageable) {
+        return ResponseEntity.ok(roomSearchService.search(request, pageable));
     }
 
     @GetMapping("/by-hotel/{hotelId}")

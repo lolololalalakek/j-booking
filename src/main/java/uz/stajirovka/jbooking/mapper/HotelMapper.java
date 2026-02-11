@@ -11,6 +11,9 @@ public interface HotelMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "city", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     HotelEntity toEntity(HotelCreateRequest request);
 
     @Mapping(source = "city.id", target = "cityId")

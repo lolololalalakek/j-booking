@@ -11,6 +11,9 @@ public interface RoomMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "hotel", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     RoomEntity toEntity(RoomCreateRequest request);
 
     @Mapping(source = "hotel.id", target = "hotelId")

@@ -1,18 +1,28 @@
 package uz.stajirovka.jbooking.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record BookingCreateRequest(
-        @NotNull Long roomId,
-        @NotBlank String guestFirstName,
-        @NotBlank String guestLastName,
-        String guestEmail,
-        @NotNull @Positive Integer numberOfGuests,
-        @NotNull LocalDateTime checkInDate,
-        @NotNull LocalDateTime checkOutDate
-) {
-}
+        @NotNull(message = "ID номера обязателен")
+        Long roomId,
+
+        @NotNull(message = "Дата заезда обязательна")
+        @Future(message = "Дата заезда должна быть в будущем")
+        LocalDateTime checkInDate,
+
+        @NotNull(message = "Дата выезда обязательна")
+        @Future(message = "Дата выезда должна быть в будущем")
+        LocalDateTime checkOutDate,
+
+        @NotNull(message = "Данные основного гостя обязательны")
+        @Valid
+        GuestInfoRequest mainGuest,
+
+        @Valid
+        List<GuestInfoRequest> additionalGuests
+) {}

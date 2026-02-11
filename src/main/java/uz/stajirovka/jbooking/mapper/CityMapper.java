@@ -10,6 +10,9 @@ import uz.stajirovka.jbooking.entity.CityEntity;
 public interface CityMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     CityEntity toEntity(CityCreateRequest request);
 
     CityResponse toResponse(CityEntity entity);
