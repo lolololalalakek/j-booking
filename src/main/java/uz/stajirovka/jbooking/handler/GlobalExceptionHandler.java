@@ -117,8 +117,9 @@ public class GlobalExceptionHandler {
         log.warn("Нарушение целостности данных: {}", ex.getMessage());
 
         Error error = Error.DATA_INTEGRITY_VIOLATION;
-        if (ex.getMessage() != null && ex.getMessage().contains("no_overlapping_bookings")) {
-            error = Error.OVERLAPPING_BOOKING;
+        String message = ex.getMessage();
+        if (message != null && message.contains("uk_payment_transactions_booking_success")) {
+            error = Error.DUPLICATE_PAYMENT;
         }
 
         return ResponseEntity.status(HttpStatus.CONFLICT)

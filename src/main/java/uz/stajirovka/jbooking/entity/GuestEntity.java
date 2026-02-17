@@ -31,8 +31,11 @@ public class GuestEntity {
     @Column(nullable = false)
     private String lastName;
 
-    // Уникальность обеспечивается partial index в БД (uk_guests_email)
-    // Позволяет несколько NULL значений
+    // ПИНФЛ — уникальный идентификатор гостя
+    // Уникальность обеспечивается partial index в БД (uk_guests_pinfl)
+    @Column(length = 14, nullable = false)
+    private String pinfl;
+
     private String email;
 
     private String phone;

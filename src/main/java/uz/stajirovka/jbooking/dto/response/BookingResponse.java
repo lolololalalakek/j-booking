@@ -2,14 +2,16 @@ package uz.stajirovka.jbooking.dto.response;
 
 import uz.stajirovka.jbooking.constant.enums.BookingStatus;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record BookingResponse(
         Long id,
-        Long roomId,
+        Long cityId,
+        String cityName,
+        Long hotelId,
         String hotelName,
+        Long roomId,
         String roomNumber,
         GuestResponse mainGuest,
         List<GuestResponse> additionalGuests,
@@ -17,7 +19,8 @@ public record BookingResponse(
         LocalDateTime checkInDate,
         LocalDateTime checkOutDate,
         BookingStatus status,
-        BigDecimal totalPrice,
+        Long pricePerNight,
+        Long totalPrice,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {}

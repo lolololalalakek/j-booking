@@ -14,6 +14,7 @@ import uz.stajirovka.jbooking.entity.HotelEntity;
 import uz.stajirovka.jbooking.entity.HotelReviewEntity;
 import uz.stajirovka.jbooking.exception.ConflictException;
 import uz.stajirovka.jbooking.exception.NotFoundException;
+import uz.stajirovka.jbooking.mapper.HotelReviewMapper;
 import uz.stajirovka.jbooking.repository.GuestRepository;
 import uz.stajirovka.jbooking.repository.HotelRepository;
 import uz.stajirovka.jbooking.repository.HotelReviewRepository;
@@ -29,10 +30,17 @@ public class HotelReviewServiceImpl implements HotelReviewService {
     private final HotelReviewRepository reviewRepository;
     private final HotelRepository hotelRepository;
     private final GuestRepository guestRepository;
+    private final HotelReviewMapper hotelReviewMapper;
 
     @Override
     @Transactional
-    public HotelReviewResponse create(HotelReviewRequest request) {
+    public HotelReviewResponse create(Long hotelId, HotelReviewRequest request) {
+        // валидируем что hotelId из path совпадает с hotelId из body
+        if (!hotelId.equals(request.hotelId())) {
+            throw new ConflictException(Error.REVIEW_HOTEL_MISMATCH,
+                    "hotelId в URL (" + hotelId + ") не совпадает с hotelId в теле запроса (" + request.hotelId() + ")");
+        }
+
         // проверяем что отзыв от этого гостя ещё не существует
         if (reviewRepository.existsByHotelIdAndGuestId(request.hotelId(), request.guestId())) {
             throw new ConflictException(Error.REVIEW_ALREADY_EXISTS);
@@ -48,40 +56,32 @@ public class HotelReviewServiceImpl implements HotelReviewService {
         entity.setDescription(request.description());
         entity.setCreatedAt(LocalDateTime.now());
 
-        return toResponse(reviewRepository.save(entity));
-    }
-
-    @Override
-    public HotelReviewResponse getById(Long id) {
-        return toResponse(findById(id));
+        return hotelReviewMapper.toResponse(reviewRepository.save(entity));
     }
 
     @Override
     public Slice<HotelReviewResponse> getByHotelId(Long hotelId, Pageable pageable) {
         return reviewRepository.findByHotelId(hotelId, pageable)
-                .map(this::toResponse);
+                .map(hotelReviewMapper::toResponse);
     }
+
+
 
     @Override
     @Transactional
-    public HotelReviewResponse update(Long id, HotelReviewRequest request) {
-        HotelReviewEntity entity = findById(id);
-
-        entity.setRating(request.rating());
-        entity.setDescription(request.description());
-
-        return toResponse(entity);
-    }
-
-    @Override
-    @Transactional
-    public void delete(Long id) {
-        HotelReviewEntity entity = findById(id);
+    public void delete(Long hotelId, Long reviewId) {
+        HotelReviewEntity entity = findById(reviewId);
+        if (!entity.getHotel().getId().equals(hotelId)) {
+            throw new ConflictException(Error.REVIEW_HOTEL_MISMATCH,
+                    "Отзыв id=" + reviewId + " не принадлежит отелю id=" + hotelId);
+        }
         reviewRepository.delete(entity);
     }
 
     @Override
     public HotelRatingResponse getHotelRating(Long hotelId) {
+        findHotelById(hotelId);
+
         Double avgRating = reviewRepository.getAverageRating(hotelId);
         long count = reviewRepository.countByHotelId(hotelId);
 
@@ -104,19 +104,5 @@ public class HotelReviewServiceImpl implements HotelReviewService {
     private GuestEntity findGuestById(Long id) {
         return guestRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(Error.GUEST_NOT_FOUND, "id=" + id));
-    }
-
-    // маппинг в response
-    private HotelReviewResponse toResponse(HotelReviewEntity entity) {
-        return new HotelReviewResponse(
-                entity.getId(),
-                entity.getHotel().getId(),
-                entity.getHotel().getName(),
-                entity.getGuest().getId(),
-                entity.getGuest().getFirstName() + " " + entity.getGuest().getLastName(),
-                entity.getRating(),
-                entity.getDescription(),
-                entity.getCreatedAt()
-        );
     }
 }

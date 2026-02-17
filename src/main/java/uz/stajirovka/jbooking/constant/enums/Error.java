@@ -36,7 +36,11 @@ public enum Error {
     CITY_HAS_HOTELS(40007, "Невозможно удалить город с активными отелями"),
     HOTEL_HAS_ROOMS(40008, "Невозможно удалить отель с активными номерами"),
     ROOM_HAS_BOOKINGS(40009, "Невозможно удалить номер с активными бронированиями"),
-    ROOM_CAPACITY_EXCEEDED(40010, "Количество гостей превышает вместимость номера");
+    ROOM_CAPACITY_EXCEEDED(40010, "Количество гостей превышает вместимость номера"),
+    PAYMENT_AMOUNT_MISMATCH(40011, "Сумма оплаты не соответствует стоимости бронирования"),
+    BOOKING_HOLD_EXPIRED(40012, "Время удержания брони истекло"),
+    REVIEW_HOTEL_MISMATCH(40013, "Отзыв не принадлежит указанному отелю"),
+    DUPLICATE_PAYMENT(40014, "Платёж по данному бронированию уже выполнен");
 
     private final int code;
     private final String message;

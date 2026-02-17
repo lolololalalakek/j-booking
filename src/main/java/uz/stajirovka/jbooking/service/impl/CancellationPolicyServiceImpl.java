@@ -6,8 +6,6 @@ import uz.stajirovka.jbooking.component.properties.CancellationProperties;
 import uz.stajirovka.jbooking.entity.BookingEntity;
 import uz.stajirovka.jbooking.service.CancellationPolicyService;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
@@ -18,9 +16,9 @@ public class CancellationPolicyServiceImpl implements CancellationPolicyService 
     private final CancellationProperties cancellationProperties;
 
     @Override
-    public BigDecimal calculateRefund(BookingEntity booking) {
+    public Long calculateRefund(BookingEntity booking) {
         if (booking.getTotalPrice() == null) {
-            return BigDecimal.ZERO;
+            return 0L;
         }
 
         long hoursUntilCheckIn = ChronoUnit.HOURS.between(LocalDateTime.now(), booking.getCheckInDate());
@@ -32,13 +30,11 @@ public class CancellationPolicyServiceImpl implements CancellationPolicyService 
 
         // частичный возврат
         if (hoursUntilCheckIn >= cancellationProperties.getPartialRefundHours()) {
-            return booking.getTotalPrice()
-                    .multiply(BigDecimal.valueOf(cancellationProperties.getPartialRefundPercent()))
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            return booking.getTotalPrice() * cancellationProperties.getPartialRefundPercent() / 100;
         }
 
         // без возврата
-        return BigDecimal.ZERO;
+        return 0L;
     }
 
     @Override

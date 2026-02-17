@@ -6,6 +6,7 @@ public record GuestResponse(
         Long id,
         String firstName,
         String lastName,
+        String pinfl,
         String email,
         String phone,
         LocalDateTime createdAt

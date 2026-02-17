@@ -9,20 +9,13 @@ import uz.stajirovka.jbooking.dto.response.HotelReviewResponse;
 // сервис отзывов об отелях
 public interface HotelReviewService {
 
-    // создать отзыв
-    HotelReviewResponse create(HotelReviewRequest request);
-
-    // получить отзыв по id
-    HotelReviewResponse getById(Long id);
+    HotelReviewResponse create(Long hotelId, HotelReviewRequest request);
 
     // получить отзывы отеля
     Slice<HotelReviewResponse> getByHotelId(Long hotelId, Pageable pageable);
 
-    // обновить отзыв
-    HotelReviewResponse update(Long id, HotelReviewRequest request);
-
     // удалить отзыв
-    void delete(Long id);
+    void delete(Long hotelId, Long reviewId);
 
     // получить рейтинг отеля
     HotelRatingResponse getHotelRating(Long hotelId);

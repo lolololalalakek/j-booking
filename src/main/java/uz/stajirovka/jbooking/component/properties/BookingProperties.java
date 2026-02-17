@@ -14,4 +14,7 @@ public class BookingProperties {
 
     // количество основных гостей (всегда 1)
     private int mainGuestCount = 1;
+
+    // таймаут удержания брони в минутах (HOLD -> CANCELLED)
+    private int holdTimeoutMinutes = 2;
 }

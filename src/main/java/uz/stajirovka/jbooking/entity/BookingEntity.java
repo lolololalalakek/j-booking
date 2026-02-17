@@ -1,7 +1,9 @@
 package uz.stajirovka.jbooking.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.type.SqlTypes;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +14,6 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.BatchSize;
 import uz.stajirovka.jbooking.constant.enums.BookingStatus;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,6 +32,14 @@ public class BookingEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "city_id", nullable = false)
+    CityEntity city;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hotel_id", nullable = false)
+    HotelEntity hotel;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id", nullable = false)
@@ -56,12 +65,18 @@ public class BookingEntity {
     @Column(name = "check_out_date", nullable = false)
     LocalDateTime checkOutDate;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false)
     BookingStatus status;
 
+    @Column(name = "price_per_night", nullable = false)
+    Long pricePerNight;
+
     @Column(name = "total_price")
-    BigDecimal totalPrice;
+    Long totalPrice;
+
+    @Column(name = "payment_id")
+    Long paymentId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     LocalDateTime createdAt;

@@ -1,10 +1,13 @@
 package uz.stajirovka.jbooking.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLRestriction;
 import lombok.AccessLevel;
@@ -16,6 +19,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "cities")
@@ -46,4 +50,8 @@ public class CityEntity {
 
     @Column(name = "deleted_at")
     LocalDateTime deletedAt;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "city_id", nullable = false)
+    List<HotelEntity> hotels;
 }

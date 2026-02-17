@@ -33,8 +33,8 @@ CREATE TYPE amenity AS ENUM (
 
 CREATE TYPE booking_status AS ENUM (
     'HOLD',
+    'PAYMENT_PROCESSING',
     'CONFIRMED',
-    'PAID',
-    'CANCELLED',
-    'MODIFIED'
+    'MODIFIED',
+    'CANCELLED'
 );

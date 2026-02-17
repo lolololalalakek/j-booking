@@ -4,13 +4,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
-import uz.stajirovka.jbooking.client.PaymentClient;
-import uz.stajirovka.jbooking.dto.request.BookingConfirmRequest;
+import uz.stajirovka.jbooking.component.adapter.PaymentClient;
 import uz.stajirovka.jbooking.dto.request.PaymentRequest;
 import uz.stajirovka.jbooking.dto.response.PaymentResponse;
 import uz.stajirovka.jbooking.service.PaymentExecutor;
-
-import java.math.BigDecimal;
 
 
 @Service
@@ -24,8 +21,7 @@ public class PaymentExecutorImpl implements PaymentExecutor {
 
 
     @Override
-    public PaymentResponse executePayment(BigDecimal totalPrice, Long cardId) {
-        PaymentRequest paymentRequest = new PaymentRequest(totalPrice.longValue(), cardId);
+    public PaymentResponse executePayment(PaymentRequest paymentRequest) {
         return paymentClient.executePayment(paymentRequest);
     }
 }

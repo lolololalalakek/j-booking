@@ -9,20 +9,21 @@ import uz.stajirovka.jbooking.constant.enums.Error;
 import uz.stajirovka.jbooking.dto.request.BookingModifyRequest;
 import uz.stajirovka.jbooking.dto.response.BookingResponse;
 import uz.stajirovka.jbooking.entity.BookingEntity;
+import uz.stajirovka.jbooking.entity.CityEntity;
+import uz.stajirovka.jbooking.entity.HotelEntity;
 import uz.stajirovka.jbooking.entity.RoomEntity;
 import uz.stajirovka.jbooking.exception.ConflictException;
 import uz.stajirovka.jbooking.exception.NotFoundException;
-import uz.stajirovka.jbooking.exception.ValidationException;
 import uz.stajirovka.jbooking.mapper.BookingMapper;
 import uz.stajirovka.jbooking.repository.BookingRepository;
+import uz.stajirovka.jbooking.repository.CityRepository;
+import uz.stajirovka.jbooking.repository.HotelRepository;
 import uz.stajirovka.jbooking.repository.RoomRepository;
 import uz.stajirovka.jbooking.service.BookingPriceService;
 import uz.stajirovka.jbooking.service.BookingStatusService;
 import uz.stajirovka.jbooking.service.CancellationPolicyService;
+import uz.stajirovka.jbooking.utility.BookingDateValidator;
 
-import java.time.temporal.ChronoUnit;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -33,23 +34,20 @@ public class BookingStatusServiceImpl implements BookingStatusService {
 
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
+    private final HotelRepository hotelRepository;
+    private final CityRepository cityRepository;
     private final BookingMapper bookingMapper;
     private final CancellationPolicyService cancellationPolicyService;
     private final BookingPriceService bookingPriceService;
     private final BookingProperties bookingProperties;
 
     // допустимые переходы статусов
-    private static final Set<BookingStatus> CONFIRMABLE_STATUSES = Set.of(BookingStatus.HOLD, BookingStatus.MODIFIED);
-    private static final Set<BookingStatus> PAYABLE_STATUSES = Set.of(BookingStatus.CONFIRMED);
     private static final Set<BookingStatus> CANCELLABLE_STATUSES = Set.of(
-            BookingStatus.HOLD, BookingStatus.CONFIRMED, BookingStatus.PAID, BookingStatus.MODIFIED
+            BookingStatus.HOLD, BookingStatus.CONFIRMED, BookingStatus.MODIFIED
     );
     private static final Set<BookingStatus> MODIFIABLE_STATUSES = Set.of(
-            BookingStatus.CONFIRMED, BookingStatus.PAID
+            BookingStatus.HOLD, BookingStatus.CONFIRMED, BookingStatus.MODIFIED
     );
-
-
-
 
     @Override
     @Transactional
@@ -69,21 +67,11 @@ public class BookingStatusServiceImpl implements BookingStatusService {
         BookingEntity booking = findById(bookingId);
         validateTransition(booking, MODIFIABLE_STATUSES, BookingStatus.MODIFIED);
 
-        // валидация дат
-        if (!request.checkOutDate().isAfter(request.checkInDate())) {
-            throw new ValidationException(Error.VALIDATION_ERROR, "Дата выезда должна быть после даты заезда");
-        }
+        long nights = BookingDateValidator.validateAndCalculateNights(
+                request.checkInDate(), request.checkOutDate(), bookingProperties.getMinNights());
 
-        long nights = ChronoUnit.DAYS.between(
-                request.checkInDate().toLocalDate(),
-                request.checkOutDate().toLocalDate());
-        if (nights < bookingProperties.getMinNights()) {
-            throw new ValidationException(Error.VALIDATION_ERROR,
-                    "Минимальный срок проживания — " + bookingProperties.getMinNights() + " ночь");
-        }
-
-        // получаем новый номер (может быть тот же или другой)
-        RoomEntity newRoom = findRoomById(request.roomId());
+        // получаем новый номер с pessimistic lock по цепочке город -> отель -> комната
+        RoomEntity newRoom = findRoomWithLock(request.cityId(), request.hotelId(), request.roomId());
 
         // проверяем вместимость нового номера
         int totalGuests = bookingProperties.getMainGuestCount()
@@ -105,10 +93,19 @@ public class BookingStatusServiceImpl implements BookingStatusService {
             throw new ConflictException(Error.ROOM_NOT_AVAILABLE);
         }
 
-        // обновляем бронирование
+        // находим отель и город для обновления бронирования
+        HotelEntity hotel = hotelRepository.findByRoomId(newRoom.getId())
+                .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "roomId=" + newRoom.getId()));
+        CityEntity city = cityRepository.findByHotelId(hotel.getId())
+                .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "hotelId=" + hotel.getId()));
+
+        // обновляем бронирование (включая город и отель для консистентности)
+        booking.setCity(city);
+        booking.setHotel(hotel);
         booking.setRoom(newRoom);
         booking.setCheckInDate(request.checkInDate());
         booking.setCheckOutDate(request.checkOutDate());
+        booking.setPricePerNight(newRoom.getPricePerNight());
         booking.setTotalPrice(bookingPriceService.calculate(newRoom, nights));
         booking.setStatus(BookingStatus.MODIFIED);
         booking.setUpdatedAt(LocalDateTime.now());
@@ -117,7 +114,7 @@ public class BookingStatusServiceImpl implements BookingStatusService {
     }
 
     @Override
-    public BigDecimal getRefundAmount(Long bookingId) {
+    public Long getRefundAmount(Long bookingId) {
         BookingEntity booking = findById(bookingId);
         return cancellationPolicyService.calculateRefund(booking);
     }
@@ -134,10 +131,11 @@ public class BookingStatusServiceImpl implements BookingStatusService {
                 .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND, "id=" + id));
     }
 
-    // поиск номера по id
-    private RoomEntity findRoomById(Long id) {
-        return roomRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(Error.ROOM_NOT_FOUND, "id=" + id));
+    // поиск комнаты по цепочке город -> отель -> комната с блокировкой (pessimistic lock)
+    private RoomEntity findRoomWithLock(Long cityId, Long hotelId, Long roomId) {
+        return roomRepository.findByIdAndHotelIdAndCityIdWithLock(roomId, hotelId, cityId)
+                .orElseThrow(() -> new NotFoundException(Error.ROOM_NOT_FOUND,
+                        "cityId=" + cityId + ", hotelId=" + hotelId + ", roomId=" + roomId));
     }
 
     // валидация перехода статуса

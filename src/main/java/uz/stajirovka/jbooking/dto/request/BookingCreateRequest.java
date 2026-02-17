@@ -8,6 +8,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record BookingCreateRequest(
+        @NotNull(message = "ID города обязателен")
+        Long cityId,
+
+        @NotNull(message = "ID отеля обязателен")
+        Long hotelId,
+
         @NotNull(message = "ID номера обязателен")
         Long roomId,
 

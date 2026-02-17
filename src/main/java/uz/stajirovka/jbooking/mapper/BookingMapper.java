@@ -14,8 +14,11 @@ import java.util.Set;
 @Mapper(componentModel = "spring")
 public interface BookingMapper {
 
+    @Mapping(source = "city.id", target = "cityId")
+    @Mapping(source = "city.name", target = "cityName")
+    @Mapping(source = "hotel.id", target = "hotelId")
+    @Mapping(source = "hotel.name", target = "hotelName")
     @Mapping(source = "room.id", target = "roomId")
-    @Mapping(source = "room.hotel.name", target = "hotelName")
     @Mapping(source = "room.roomNumber", target = "roomNumber")
     @Mapping(source = "guest", target = "mainGuest", qualifiedByName = "toGuestResponse")
     @Mapping(source = "additionalGuests", target = "additionalGuests", qualifiedByName = "guestsToList")
@@ -31,6 +34,7 @@ public interface BookingMapper {
                 entity.getId(),
                 entity.getFirstName(),
                 entity.getLastName(),
+                entity.getPinfl(),
                 entity.getEmail(),
                 entity.getPhone(),
                 entity.getCreatedAt()

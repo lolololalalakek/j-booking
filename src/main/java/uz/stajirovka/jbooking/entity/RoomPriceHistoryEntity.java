@@ -17,7 +17,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -39,7 +38,7 @@ public class RoomPriceHistoryEntity {
     RoomEntity room;
 
     @Column(name = "price_per_night", nullable = false)
-    BigDecimal pricePerNight;
+    Long pricePerNight;
 
     @Column(name = "valid_from", nullable = false)
     LocalDateTime validFrom;

@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import uz.stajirovka.jbooking.constant.enums.Amenity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -26,7 +25,7 @@ public record RoomSearchRequest(
         // опциональные фильтры
         Long cityId,
         Long hotelId,
-        BigDecimal minPrice,
-        BigDecimal maxPrice,
+        Long minPrice,
+        Long maxPrice,
         Set<Amenity> amenities
 ) {}

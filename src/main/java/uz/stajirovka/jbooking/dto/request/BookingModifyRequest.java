@@ -6,6 +6,12 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 public record BookingModifyRequest(
+        @NotNull(message = "ID города обязателен")
+        Long cityId,
+
+        @NotNull(message = "ID отеля обязателен")
+        Long hotelId,
+
         @NotNull(message = "ID номера обязателен")
         Long roomId,
 

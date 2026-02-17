@@ -1,35 +1,34 @@
 package uz.stajirovka.jbooking.repository;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import uz.stajirovka.jbooking.constant.enums.BookingStatus;
 import uz.stajirovka.jbooking.entity.BookingEntity;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
 
-    // fetch join для ManyToOne связей (additionalGuests загружается через @BatchSize)
-    @Query("""
-        SELECT b FROM BookingEntity b
-        JOIN FETCH b.room r
-        JOIN FETCH r.hotel
-        JOIN FETCH b.guest
-        """)
-    Slice<BookingEntity> findAllBy(Pageable pageable);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT b FROM BookingEntity b WHERE b.id = :id")
+    Optional<BookingEntity> findByIdWithLock(@Param("id") Long id);
 
-    // fetch join для ManyToOne связей (additionalGuests загружается через @BatchSize)
+    // получение бронирований гостя по ПИНФЛ
     @Query("""
         SELECT b FROM BookingEntity b
-        JOIN FETCH b.room r
-        JOIN FETCH r.hotel
+        JOIN FETCH b.room
+        JOIN FETCH b.hotel
+        JOIN FETCH b.city
         JOIN FETCH b.guest
-        WHERE b.guest.id = :guestId
+        WHERE b.guest.pinfl = :pinfl
         """)
-    Slice<BookingEntity> findByGuestId(@Param("guestId") Long guestId, Pageable pageable);
+    Slice<BookingEntity> findByGuestPinfl(@Param("pinfl") String pinfl, Pageable pageable);
 
     // проверка пересечения дат бронирования для номера
     @Query("""
@@ -63,16 +62,15 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
             @Param("excludeBookingId") Long excludeBookingId
     );
 
-    // проверка наличия активных бронирований для номера (не отменённых и не завершённых)
+    // поиск просроченных бронирований в статусе HOLD (батчами)
     @Query("""
-        SELECT COUNT(b) > 0 FROM BookingEntity b
-        WHERE b.room.id = :roomId
-          AND b.status <> :cancelledStatus
-          AND b.checkOutDate > :now
+        SELECT b FROM BookingEntity b
+        WHERE b.status = :holdStatus
+          AND b.createdAt < :expiredBefore
         """)
-    boolean existsActiveByRoomId(
-            @Param("roomId") Long roomId,
-            @Param("cancelledStatus") BookingStatus cancelledStatus,
-            @Param("now") LocalDateTime now
+    Slice<BookingEntity> findExpiredHolds(
+            @Param("holdStatus") BookingStatus holdStatus,
+            @Param("expiredBefore") LocalDateTime expiredBefore,
+            Pageable pageable
     );
 }

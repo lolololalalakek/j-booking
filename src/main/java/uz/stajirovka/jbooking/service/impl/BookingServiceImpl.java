@@ -7,30 +7,36 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.stajirovka.jbooking.component.properties.BookingProperties;
 import uz.stajirovka.jbooking.constant.enums.BookingStatus;
+import uz.stajirovka.jbooking.constant.enums.Currency;
 import uz.stajirovka.jbooking.constant.enums.Error;
 import uz.stajirovka.jbooking.dto.request.BookingConfirmRequest;
 import uz.stajirovka.jbooking.dto.request.BookingCreateRequest;
 import uz.stajirovka.jbooking.dto.request.GuestInfoRequest;
+import uz.stajirovka.jbooking.dto.request.PaymentRequest;
 import uz.stajirovka.jbooking.dto.response.BookingConfirmResponse;
 import uz.stajirovka.jbooking.dto.response.BookingResponse;
 import uz.stajirovka.jbooking.dto.response.PaymentResponse;
 import uz.stajirovka.jbooking.entity.BookingEntity;
+import uz.stajirovka.jbooking.entity.CityEntity;
 import uz.stajirovka.jbooking.entity.GuestEntity;
+import uz.stajirovka.jbooking.entity.HotelEntity;
 import uz.stajirovka.jbooking.entity.RoomEntity;
 import uz.stajirovka.jbooking.exception.ConflictException;
 import uz.stajirovka.jbooking.exception.NotFoundException;
 import uz.stajirovka.jbooking.exception.ValidationException;
 import uz.stajirovka.jbooking.mapper.BookingMapper;
 import uz.stajirovka.jbooking.repository.BookingRepository;
-import uz.stajirovka.jbooking.repository.GuestRepository;
+import uz.stajirovka.jbooking.repository.CityRepository;
+import uz.stajirovka.jbooking.repository.HotelRepository;
 import uz.stajirovka.jbooking.repository.RoomRepository;
 import uz.stajirovka.jbooking.service.BookingPriceService;
 import uz.stajirovka.jbooking.service.BookingService;
+import uz.stajirovka.jbooking.service.CurrencyConverterService;
+import uz.stajirovka.jbooking.service.GuestService;
 import uz.stajirovka.jbooking.service.PaymentExecutor;
+import uz.stajirovka.jbooking.utility.BookingDateValidator;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -41,32 +47,25 @@ public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
-    private final GuestRepository guestRepository;
+    private final HotelRepository hotelRepository;
+    private final CityRepository cityRepository;
+    private final GuestService guestService;
     private final BookingMapper bookingMapper;
     private final BookingPriceService bookingPriceService;
     private final BookingProperties bookingProperties;
-    private final PaymentExecutor  paymentExecutor;
+    private final PaymentExecutor paymentExecutor;
+    private final PaymentProcessingService paymentProcessingService;
+    private final CurrencyConverterService currencyConverter;
 
     // создание нового бронирования
     @Override
     @Transactional
     public BookingResponse initBooking(BookingCreateRequest request) {
-        // валидация дат
-        if (!request.checkOutDate().isAfter(request.checkInDate())) {
-            throw new ValidationException(Error.VALIDATION_ERROR, "Дата выезда должна быть после даты заезда");
-        }
-
-        // проверка минимального срока проживания
-        long nights = ChronoUnit.DAYS.between(
-            request.checkInDate().toLocalDate(),
-            request.checkOutDate().toLocalDate());
-        if (nights < bookingProperties.getMinNights()) {
-            throw new ValidationException(Error.VALIDATION_ERROR,
-                    "Минимальный срок проживания — " + bookingProperties.getMinNights() + " ночь");
-        }
+        long nights = BookingDateValidator.validateAndCalculateNights(
+                request.checkInDate(), request.checkOutDate(), bookingProperties.getMinNights());
 
         // блокируем комнату для предотвращения race condition
-        RoomEntity room = findRoomByIdWithLock(request.roomId());
+        RoomEntity room = findRoomWithLock(request.cityId(), request.hotelId(), request.roomId());
 
         // проверка доступности номера на выбранные даты (сразу после блокировки)
         if (bookingRepository.existsOverlappingBooking(
@@ -87,18 +86,26 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // находим или создаём основного гостя
-        GuestEntity mainGuest = findOrCreateGuest(request.mainGuest());
+        GuestEntity mainGuest = guestService.findOrCreateGuest(request.mainGuest());
 
         // находим или создаём дополнительных гостей
         Set<GuestEntity> additionalGuests = new HashSet<>();
         if (request.additionalGuests() != null) {
             for (GuestInfoRequest guestInfo : request.additionalGuests()) {
-                additionalGuests.add(findOrCreateGuest(guestInfo));
+                additionalGuests.add(guestService.findOrCreateGuest(guestInfo));
             }
         }
 
+        // находим отель и город для бронирования
+        HotelEntity hotel = hotelRepository.findByRoomId(room.getId())
+                .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "roomId=" + room.getId()));
+        CityEntity city = cityRepository.findByHotelId(hotel.getId())
+                .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "hotelId=" + hotel.getId()));
+
         // создаём бронирование
         BookingEntity entity = new BookingEntity();
+        entity.setCity(city);
+        entity.setHotel(hotel);
         entity.setRoom(room);
         entity.setGuest(mainGuest);
         entity.setAdditionalGuests(additionalGuests);
@@ -106,7 +113,8 @@ public class BookingServiceImpl implements BookingService {
         entity.setCheckOutDate(request.checkOutDate());
         entity.setStatus(BookingStatus.HOLD);
 
-        // рассчитываем цену
+        // фиксируем цену за ночь (snapshot) и рассчитываем итого
+        entity.setPricePerNight(room.getPricePerNight());
         entity.setTotalPrice(bookingPriceService.calculate(room, nights));
 
         LocalDateTime now = LocalDateTime.now();
@@ -116,68 +124,61 @@ public class BookingServiceImpl implements BookingService {
         return bookingMapper.toResponse(bookingRepository.save(entity));
     }
 
+    // confirmBooking НЕ @Transactional — оркестрирует 3 фазы
     @Override
     public BookingConfirmResponse confirmBooking(BookingConfirmRequest request) {
         Long bookingId = request.bookingId();
 
-        BookingEntity bookingEntity = bookingRepository.findById(bookingId)
-            .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND));
+        // Фаза 1: короткая транзакция — lock, валидация, HOLD -> PAYMENT_PROCESSING
+        PaymentRequest paymentRequest = paymentProcessingService.validateAndLock(bookingId, request);
 
-
-        BigDecimal totalPrice = bookingEntity.getTotalPrice();
-
-        PaymentResponse paymentResponse = paymentExecutor.executePayment(totalPrice, request.cardId());
-
-        BookingStatus bookingStatus = BookingStatus.fromTransactionStatus(paymentResponse.transactionStatus());
-
-        return new BookingConfirmResponse(bookingStatus, bookingId, paymentResponse.transactionId() );
-
-    }
-
-    // получение бронирования по идентификатору
-    @Override
-    public BookingResponse getById(Long id) {
-        return bookingMapper.toResponse(findById(id));
-    }
-
-    // получение всех бронирований с пагинацией
-    @Override
-    public Slice<BookingResponse> getAll(Pageable pageable) {
-        return bookingRepository.findAllBy(pageable)
-            .map(bookingMapper::toResponse);
-    }
-
-
-    // находим существующего гостя по email или создаём нового
-    // используем pessimistic lock для предотвращения race condition
-    private GuestEntity findOrCreateGuest(GuestInfoRequest guestInfo) {
-        // если есть email - ищем существующего гостя с блокировкой
-        if (guestInfo.email() != null && !guestInfo.email().isBlank()) {
-            return guestRepository.findByEmailWithLock(guestInfo.email())
-                .orElseGet(() -> createGuest(guestInfo));
+        // HOLD просрочен — фаза 1 уже поставила CANCELLED
+        if (paymentRequest == null) {
+            return new BookingConfirmResponse(BookingStatus.CANCELLED, bookingId, null);
         }
-        // если email нет - всегда создаём нового
-        return createGuest(guestInfo);
+
+        // Фаза 2: вызов платёжки БЕЗ транзакции — lock уже отпущен
+        PaymentResponse paymentResponse = paymentExecutor.executePayment(paymentRequest);
+
+        // Фаза 3: короткая транзакция — сохраняем результат платежа
+        BookingStatus finalStatus = paymentProcessingService.savePaymentResult(bookingId, paymentResponse);
+
+        return new BookingConfirmResponse(finalStatus, bookingId, paymentResponse.id());
     }
 
-    // создание нового гостя
-    private GuestEntity createGuest(GuestInfoRequest guestInfo) {
-        GuestEntity guest = new GuestEntity();
-        guest.setFirstName(guestInfo.firstName());
-        guest.setLastName(guestInfo.lastName());
-        // пустой email нормализуем в null для корректной работы UNIQUE
-        String email = guestInfo.email();
-        guest.setEmail(email != null && !email.isBlank() ? email : null);
-        guest.setPhone(guestInfo.phone());
-        guest.setCreatedAt(LocalDateTime.now());
-        return guestRepository.save(guest);
-    }
-
-    // получение истории бронирований по идентификатору гостя
     @Override
-    public Slice<BookingResponse> getByGuestId(Long guestId, Pageable pageable) {
-        return bookingRepository.findByGuestId(guestId, pageable)
-                .map(bookingMapper::toResponse);
+    public BookingResponse getById(Long id, Currency currency) {
+        BookingResponse response = bookingMapper.toResponse(findById(id));
+        return convertPrice(response, currency);
+    }
+
+    @Override
+    public Slice<BookingResponse> getAllByPinfl(String pinfl, Currency currency, Pageable pageable) {
+        return bookingRepository.findByGuestPinfl(pinfl, pageable)
+                .map(bookingMapper::toResponse)
+                .map(r -> convertPrice(r, currency));
+    }
+
+    private BookingResponse convertPrice(BookingResponse response, Currency currency) {
+        return new BookingResponse(
+                response.id(),
+                response.cityId(),
+                response.cityName(),
+                response.hotelId(),
+                response.hotelName(),
+                response.roomId(),
+                response.roomNumber(),
+                response.mainGuest(),
+                response.additionalGuests(),
+                response.totalGuests(),
+                response.checkInDate(),
+                response.checkOutDate(),
+                response.status(),
+                currencyConverter.convert(response.pricePerNight(), currency),
+                currencyConverter.convert(response.totalPrice(), currency),
+                response.createdAt(),
+                response.updatedAt()
+        );
     }
 
     // поиск бронирования по идентификатору или выброс исключения
@@ -186,9 +187,10 @@ public class BookingServiceImpl implements BookingService {
             .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND, "id=" + id));
     }
 
-    // поиск комнаты с блокировкой (pessimistic lock)
-    private RoomEntity findRoomByIdWithLock(Long id) {
-        return roomRepository.findByIdWithLock(id)
-            .orElseThrow(() -> new NotFoundException(Error.ROOM_NOT_FOUND, "id=" + id));
+    // поиск комнаты по цепочке город -> отель -> комната с блокировкой (pessimistic lock)
+    private RoomEntity findRoomWithLock(Long cityId, Long hotelId, Long roomId) {
+        return roomRepository.findByIdAndHotelIdAndCityIdWithLock(roomId, hotelId, cityId)
+            .orElseThrow(() -> new NotFoundException(Error.ROOM_NOT_FOUND,
+                    "cityId=" + cityId + ", hotelId=" + hotelId + ", roomId=" + roomId));
     }
 }
