@@ -7,9 +7,7 @@ public enum BookingStatus {
     MODIFIED,            // изменено после подтверждения
     CANCELLED;           // отменено
 
-    // заглушка: CREATED трактуем как успех, пока TransactionProcessing не дописан
-    // TODO: заменить на COMPLETED когда платёжка будет полностью готова
     public static boolean isPaymentSuccessful(TransactionStatus transactionStatus) {
-        return transactionStatus == TransactionStatus.CREATED;
+        return transactionStatus == TransactionStatus.COMPLETED;
     }
 }
