@@ -10,11 +10,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class BookingProperties {
 
     // минимальное количество ночей
-    private int minNights = 1;
+    private int minNights;
 
     // количество основных гостей (всегда 1)
-    private int mainGuestCount = 1;
+    private int mainGuestCount;
 
     // таймаут удержания брони в минутах (HOLD -> CANCELLED)
-    private int holdTimeoutMinutes = 2;
+    private int holdTimeoutMinutes;
+
+    // таймаут для статуса PAYMENT_PROCESSING (мин) — после него recovery-шедулер сбрасывает в HOLD
+    private int paymentProcessingTimeoutMinutes;
+
+    // интервал проверки застрявших PAYMENT_PROCESSING бронирований (мс)
+    private int paymentProcessingCheckIntervalMs;
 }

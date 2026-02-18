@@ -36,7 +36,9 @@ spring:
 booking:
   min-nights: 1
   main-guest-count: 1
-  hold-timeout-minutes: 2
+  hold-timeout-minutes: 1
+  payment-processing-timeout-minutes: 1
+  payment-processing-check-interval-ms: 60000
   cancellation:
     full-refund-hours: 72
     partial-refund-hours: 24

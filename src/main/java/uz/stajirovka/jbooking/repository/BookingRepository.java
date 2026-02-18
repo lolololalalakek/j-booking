@@ -73,4 +73,16 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
             @Param("expiredBefore") LocalDateTime expiredBefore,
             Pageable pageable
     );
+
+    // поиск застрявших бронирований в статусе PAYMENT_PROCESSING (для recovery-шедулера)
+    @Query("""
+        SELECT b FROM BookingEntity b
+        WHERE b.status = :processingStatus
+          AND b.updatedAt < :stuckBefore
+        """)
+    Slice<BookingEntity> findStuckPaymentProcessing(
+            @Param("processingStatus") BookingStatus processingStatus,
+            @Param("stuckBefore") LocalDateTime stuckBefore,
+            Pageable pageable
+    );
 }

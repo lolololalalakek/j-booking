@@ -51,14 +51,30 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
-    // Невалидный JSON
+    // Невалидный JSON или невалидное значение поля (например, дата 2026-04-32)
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorDto> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-        log.warn("Невалидный JSON: {}", ex.getMessage());
+        log.warn("Невалидный JSON: {}, cause: {}", ex.getMessage(),
+                ex.getCause() != null ? ex.getCause().getClass().getName() : "null");
+
+        String message = Error.JSON_NOT_VALID.getMessage();
+        Throwable cause = ex.getCause();
+        if (cause instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException ife) {
+            String fieldName = ife.getPath().isEmpty() ? "unknown"
+                    : ife.getPath().getLast().getFieldName();
+            message = "Невалидное значение поля '" + fieldName + "': " + ife.getValue();
+        } else if (cause instanceof com.fasterxml.jackson.databind.exc.MismatchedInputException mie) {
+            String fieldName = mie.getPath().isEmpty() ? "unknown"
+                    : mie.getPath().getLast().getFieldName();
+            message = "Невалидное значение поля '" + fieldName + "'";
+        } else if (cause instanceof com.fasterxml.jackson.core.JsonParseException) {
+            message = "Невалидный формат JSON";
+        }
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorDto.builder()
                         .code(Error.JSON_NOT_VALID.getCode())
-                        .message(Error.JSON_NOT_VALID.getMessage())
+                        .message(message)
                         .type(ErrorType.VALIDATION)
                         .build());
     }
@@ -118,7 +134,8 @@ public class GlobalExceptionHandler {
 
         Error error = Error.DATA_INTEGRITY_VIOLATION;
         String message = ex.getMessage();
-        if (message != null && message.contains("uk_payment_transactions_booking_success")) {
+        if (message != null && (message.contains("uk_payment_transactions_booking_success")
+                || message.contains("uk_payment_transactions_txn_id"))) {
             error = Error.DUPLICATE_PAYMENT;
         }
 

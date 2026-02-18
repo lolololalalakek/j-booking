@@ -1,6 +1,7 @@
 package uz.stajirovka.jbooking.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -129,7 +131,7 @@ public class BookingServiceImpl implements BookingService {
     public BookingConfirmResponse confirmBooking(BookingConfirmRequest request) {
         Long bookingId = request.bookingId();
 
-        // Фаза 1: короткая транзакция — lock, валидация, HOLD -> PAYMENT_PROCESSING
+        // фаза 1: короткая транзакция — lock, валидация, HOLD -> PAYMENT_PROCESSING
         PaymentRequest paymentRequest = paymentProcessingService.validateAndLock(bookingId, request);
 
         // HOLD просрочен — фаза 1 уже поставила CANCELLED
@@ -138,7 +140,13 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // Фаза 2: вызов платёжки БЕЗ транзакции — lock уже отпущен
-        PaymentResponse paymentResponse = paymentExecutor.executePayment(paymentRequest);
+        PaymentResponse paymentResponse;
+        try {
+            paymentResponse = paymentExecutor.executePayment(paymentRequest);
+        } catch (Exception e) {
+            log.error("Ошибка платёжного сервиса для bookingId={}: {}", bookingId, e.getMessage());
+            throw e;
+        }
 
         // Фаза 3: короткая транзакция — сохраняем результат платежа
         BookingStatus finalStatus = paymentProcessingService.savePaymentResult(bookingId, paymentResponse);
