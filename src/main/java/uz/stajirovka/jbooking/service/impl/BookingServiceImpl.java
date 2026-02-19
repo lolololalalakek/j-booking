@@ -23,6 +23,7 @@ import uz.stajirovka.jbooking.entity.GuestEntity;
 import uz.stajirovka.jbooking.entity.HotelEntity;
 import uz.stajirovka.jbooking.entity.RoomEntity;
 import uz.stajirovka.jbooking.exception.ConflictException;
+import uz.stajirovka.jbooking.exception.InternalException;
 import uz.stajirovka.jbooking.exception.NotFoundException;
 import uz.stajirovka.jbooking.exception.ValidationException;
 import uz.stajirovka.jbooking.mapper.BookingMapper;
@@ -145,7 +146,7 @@ public class BookingServiceImpl implements BookingService {
             paymentResponse = paymentExecutor.executePayment(paymentRequest);
         } catch (Exception e) {
             log.error("Ошибка платёжного сервиса для bookingId={}: {}", bookingId, e.getMessage());
-            throw e;
+            throw new InternalException(Error.INTERNAL_ERROR, "Ошибка платёжного сервиса: " + e.getMessage());
         }
 
         // Фаза 3: короткая транзакция — сохраняем результат платежа
