@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import uz.stajirovka.jbooking.entity.HotelReviewEntity;
 
+import java.util.Optional;
+
 
 public interface HotelReviewRepository extends JpaRepository<HotelReviewEntity, Long> {
 
@@ -19,6 +21,9 @@ public interface HotelReviewRepository extends JpaRepository<HotelReviewEntity, 
     // средний рейтинг отеля
     @Query("SELECT AVG(r.rating) FROM HotelReviewEntity r WHERE r.hotel.id = :hotelId")
     Double getAverageRating(@Param("hotelId") Long hotelId);
+
+    // поиск отзыва по id, отелю и гостю (для проверки доступа)
+    Optional<HotelReviewEntity> findByIdAndHotelIdAndGuestId(Long id, Long hotelId, Long guestId);
 
     // количество отзывов отеля
     long countByHotelId(Long hotelId);

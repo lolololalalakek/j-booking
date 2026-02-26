@@ -34,7 +34,10 @@ public enum Error {
     ROOM_CAPACITY_EXCEEDED(40010, "Количество гостей превышает вместимость номера"),
     PAYMENT_AMOUNT_MISMATCH(40011, "Сумма оплаты не соответствует стоимости бронирования"),
     REVIEW_HOTEL_MISMATCH(40013, "Отзыв не принадлежит указанному отелю"),
-    DUPLICATE_PAYMENT(40014, "Платёж по данному бронированию уже выполнен");
+    DUPLICATE_PAYMENT(40014, "Платёж по данному бронированию уже выполнен"),
+
+    // Ошибки доступа (50xxx)
+    REVIEW_ACCESS_DENIED(50001, "Нет доступа к отзыву");
 
     private final int code;
     private final String message;
