@@ -8,10 +8,14 @@ import uz.stajirovka.jbooking.dto.response.PaymentResponse;
 
 @FeignClient(
     name = "paymentClient",
-    url =  "${client.payment.url}"
+    url = "${client.payment.url}"
 )
 public interface PaymentClient {
 
     @PostMapping("/api/v1/transactions")
     PaymentResponse executePayment(@RequestBody PaymentRequest request);
+
+
+    // СОХРАНЯЮ ЛОГИН-ПАРОЛЬ В ЯМЛ. ПОСМОТРЕТЬ У МУХАММАД-САИДА В КОРТЕ. СКИНЕТ ССЫЛКУ
+
 }

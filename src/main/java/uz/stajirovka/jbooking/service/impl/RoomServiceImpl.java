@@ -36,7 +36,7 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponse getById(Long id, Currency currency) {
         RoomEntity room = findById(id);
         HotelEntity hotel = hotelRepository.findByRoomId(id)
-                .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "roomId=" + id));
+            .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "roomId=" + id));
         RoomResponse response = roomMapper.toResponse(room, hotel);
         return convertPrice(response, currency);
     }
@@ -44,10 +44,10 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public Slice<RoomResponse> getByHotelId(Long hotelId, Currency currency, Pageable pageable) {
         HotelEntity hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "id=" + hotelId));
+            .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "id=" + hotelId));
         return roomRepository.findByHotelId(hotelId, pageable)
-                .map(room -> roomMapper.toResponse(room, hotel))
-                .map(r -> convertPrice(r, currency));
+            .map(room -> roomMapper.toResponse(room, hotel))
+            .map(r -> convertPrice(r, currency));
     }
 
     @Override
@@ -55,17 +55,17 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponse updatePrice(Long id, Long newPrice) {
         RoomEntity room = findById(id);
         HotelEntity hotel = hotelRepository.findByRoomId(id)
-                .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "roomId=" + id));
+            .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "roomId=" + id));
         LocalDateTime now = LocalDateTime.now();
 
         priceHistoryRepository.closeCurrentPrice(room.getId(), now);
 
         RoomPriceHistoryEntity history = RoomPriceHistoryEntity.builder()
-                .room(room)
-                .pricePerNight(newPrice)
-                .validFrom(now)
-                .createdAt(now)
-                .build();
+            .room(room)
+            .pricePerNight(newPrice)
+            .validFrom(now)
+            .createdAt(now)
+            .build();
         priceHistoryRepository.save(history);
 
         room.setPricePerNight(newPrice);
@@ -76,21 +76,21 @@ public class RoomServiceImpl implements RoomService {
 
     private RoomResponse convertPrice(RoomResponse response, Currency currency) {
         return new RoomResponse(
-                response.id(),
-                response.hotelId(),
-                response.hotelName(),
-                response.roomNumber(),
-                response.roomType(),
-                response.mealPlan(),
-                response.amenities(),
-                response.capacity(),
-                currencyConverter.convert(response.pricePerNight(), currency),
-                response.description()
+            response.id(),
+            response.hotelId(),
+            response.hotelName(),
+            response.roomNumber(),
+            response.roomType(),
+            response.mealPlan(),
+            response.amenities(),
+            response.capacity(),
+            currencyConverter.convert(response.pricePerNight(), currency),
+            response.description()
         );
     }
 
     private RoomEntity findById(Long id) {
         return roomRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(Error.ROOM_NOT_FOUND, "id=" + id));
+            .orElseThrow(() -> new NotFoundException(Error.ROOM_NOT_FOUND, "id=" + id));
     }
 }

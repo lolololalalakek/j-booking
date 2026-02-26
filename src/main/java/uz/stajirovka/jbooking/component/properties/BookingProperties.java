@@ -12,15 +12,18 @@ public class BookingProperties {
     // минимальное количество ночей
     private int minNights;
 
-    // количество основных гостей (всегда 1)
-    private int mainGuestCount;
-
     // таймаут удержания брони в минутах (HOLD -> CANCELLED)
     private int holdTimeoutMinutes;
+
+    // интервал проверки просроченных HOLD бронирований (мс)
+    private int holdCheckIntervalMs;
 
     // таймаут для статуса PAYMENT_PROCESSING (мин) — после него recovery-шедулер сбрасывает в HOLD
     private int paymentProcessingTimeoutMinutes;
 
     // интервал проверки застрявших PAYMENT_PROCESSING бронирований (мс)
     private int paymentProcessingCheckIntervalMs;
+
+    // размер батча при пакетной обработке бронирований в шедулерах
+    private int batchSize;
 }

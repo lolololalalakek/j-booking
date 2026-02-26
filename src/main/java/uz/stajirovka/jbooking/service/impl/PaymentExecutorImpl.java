@@ -16,7 +16,6 @@ import uz.stajirovka.jbooking.service.PaymentExecutor;
 public class PaymentExecutorImpl implements PaymentExecutor {
 
 
-
     PaymentClient paymentClient;
 
 

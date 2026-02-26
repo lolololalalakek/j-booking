@@ -20,7 +20,7 @@ public class BookingDateValidator {
 
         if (nights < minNights) {
             throw new ValidationException(Error.VALIDATION_ERROR,
-                    "Минимальный срок проживания — " + minNights + " ночь");
+                "Минимальный срок проживания — " + minNights + " ночь");
         }
 
         return nights;

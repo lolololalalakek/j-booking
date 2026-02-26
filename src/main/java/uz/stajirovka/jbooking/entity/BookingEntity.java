@@ -1,9 +1,16 @@
 package uz.stajirovka.jbooking.entity;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.type.SqlTypes;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +19,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 import uz.stajirovka.jbooking.constant.enums.BookingStatus;
 
 import java.time.LocalDateTime;
@@ -46,8 +58,8 @@ public class BookingEntity {
     RoomEntity room;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "guest_id", nullable = false)
-    GuestEntity guest;
+    @JoinColumn(name = "main_guest_id", nullable = false)
+    GuestEntity mainGuest;
 
     @ManyToMany
     @JoinTable(
@@ -78,10 +90,15 @@ public class BookingEntity {
     @Column(name = "payment_id")
     Long paymentId;
 
+    @Column(name = "notification_id")
+    Long notificationId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
     LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
+    @UpdateTimestamp
     LocalDateTime updatedAt;
 
     @Column(name = "deleted_at")

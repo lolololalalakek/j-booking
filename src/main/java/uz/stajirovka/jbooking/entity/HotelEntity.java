@@ -3,15 +3,14 @@ package uz.stajirovka.jbooking.entity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.type.SqlTypes;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +18,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.type.SqlTypes;
 import uz.stajirovka.jbooking.constant.enums.AccommodationType;
 
 import java.time.LocalDateTime;
@@ -38,6 +40,10 @@ public class HotelEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "city_id", nullable = false)
+    CityEntity city;
 
     @Column(nullable = false)
     String name;
@@ -60,7 +66,6 @@ public class HotelEntity {
     @Column(name = "deleted_at")
     LocalDateTime deletedAt;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "hotel_id", nullable = false)
+    @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL, orphanRemoval = true)
     List<RoomEntity> rooms;
 }

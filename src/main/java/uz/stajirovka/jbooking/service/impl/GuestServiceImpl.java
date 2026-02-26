@@ -22,7 +22,7 @@ public class GuestServiceImpl implements GuestService {
     @Transactional
     public GuestEntity findOrCreateGuest(GuestInfoRequest guestInfo) {
         return guestRepository.findByPinflWithLock(guestInfo.pinfl())
-                .orElseGet(() -> createGuestEntity(guestInfo));
+            .orElseGet(() -> createGuestEntity(guestInfo));
     }
 
     private GuestEntity createGuestEntity(GuestInfoRequest guestInfo) {

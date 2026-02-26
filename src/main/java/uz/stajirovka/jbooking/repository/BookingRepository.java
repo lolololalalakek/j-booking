@@ -19,14 +19,14 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
     @Query("SELECT b FROM BookingEntity b WHERE b.id = :id")
     Optional<BookingEntity> findByIdWithLock(@Param("id") Long id);
 
-    // получение бронирований гостя по ПИНФЛ
+    // получение бронирований гостя по ПИНФЛ (по основному гостю)
     @Query("""
         SELECT b FROM BookingEntity b
         JOIN FETCH b.room
         JOIN FETCH b.hotel
         JOIN FETCH b.city
-        JOIN FETCH b.guest
-        WHERE b.guest.pinfl = :pinfl
+        JOIN FETCH b.mainGuest
+        WHERE b.mainGuest.pinfl = :pinfl
         """)
     Slice<BookingEntity> findByGuestPinfl(@Param("pinfl") String pinfl, Pageable pageable);
 
@@ -39,10 +39,10 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
           AND b.checkOutDate > :checkInDate
         """)
     boolean existsOverlappingBooking(
-            @Param("roomId") Long roomId,
-            @Param("checkInDate") LocalDateTime checkInDate,
-            @Param("checkOutDate") LocalDateTime checkOutDate,
-            @Param("cancelledStatus") BookingStatus cancelledStatus
+        @Param("roomId") Long roomId,
+        @Param("checkInDate") LocalDateTime checkInDate,
+        @Param("checkOutDate") LocalDateTime checkOutDate,
+        @Param("cancelledStatus") BookingStatus cancelledStatus
     );
 
     // проверка пересечения дат исключая указанное бронирование (для modify)
@@ -55,11 +55,11 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
           AND b.checkOutDate > :checkInDate
         """)
     boolean existsOverlappingBookingExcluding(
-            @Param("roomId") Long roomId,
-            @Param("checkInDate") LocalDateTime checkInDate,
-            @Param("checkOutDate") LocalDateTime checkOutDate,
-            @Param("cancelledStatus") BookingStatus cancelledStatus,
-            @Param("excludeBookingId") Long excludeBookingId
+        @Param("roomId") Long roomId,
+        @Param("checkInDate") LocalDateTime checkInDate,
+        @Param("checkOutDate") LocalDateTime checkOutDate,
+        @Param("cancelledStatus") BookingStatus cancelledStatus,
+        @Param("excludeBookingId") Long excludeBookingId
     );
 
     // поиск просроченных бронирований в статусе HOLD (батчами)
@@ -69,9 +69,9 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
           AND b.createdAt < :expiredBefore
         """)
     Slice<BookingEntity> findExpiredHolds(
-            @Param("holdStatus") BookingStatus holdStatus,
-            @Param("expiredBefore") LocalDateTime expiredBefore,
-            Pageable pageable
+        @Param("holdStatus") BookingStatus holdStatus,
+        @Param("expiredBefore") LocalDateTime expiredBefore,
+        Pageable pageable
     );
 
     // поиск застрявших бронирований в статусе PAYMENT_PROCESSING (для recovery-шедулера)
@@ -81,8 +81,8 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
           AND b.updatedAt < :stuckBefore
         """)
     Slice<BookingEntity> findStuckPaymentProcessing(
-            @Param("processingStatus") BookingStatus processingStatus,
-            @Param("stuckBefore") LocalDateTime stuckBefore,
-            Pageable pageable
+        @Param("processingStatus") BookingStatus processingStatus,
+        @Param("stuckBefore") LocalDateTime stuckBefore,
+        Pageable pageable
     );
 }

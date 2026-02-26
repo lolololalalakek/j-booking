@@ -42,20 +42,20 @@ public class HotelSearchServiceImpl implements HotelSearchService {
         }
 
         return hotelRepository.search(
-                request.cityId(),
-                request.minStars(),
-                request.guests(),
-                request.minPrice(),
-                request.maxPrice(),
-                amenities,
-                amenityCount,
-                BookingStatus.CANCELLED,
-                request.checkInDate(),
-                request.checkOutDate(),
-                pageable
+            request.cityId(),
+            request.minStars(),
+            request.guests(),
+            request.minPrice(),
+            request.maxPrice(),
+            amenities,
+            amenityCount,
+            BookingStatus.CANCELLED,
+            request.checkInDate(),
+            request.checkOutDate(),
+            pageable
         ).map(hotel -> {
             CityEntity city = cityRepository.findByHotelId(hotel.getId())
-                    .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "hotelId=" + hotel.getId()));
+                .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "hotelId=" + hotel.getId()));
             return hotelMapper.toResponse(hotel, city);
         });
     }

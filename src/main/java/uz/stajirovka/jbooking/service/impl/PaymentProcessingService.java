@@ -38,12 +38,12 @@ public class PaymentProcessingService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public PaymentRequest validateAndLock(Long bookingId, BookingConfirmRequest request) {
         BookingEntity booking = bookingRepository.findByIdWithLock(bookingId)
-                .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND));
+            .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND));
 
         // подтвердить можно только бронь в статусе HOLD
         if (booking.getStatus() != BookingStatus.HOLD) {
             throw new ConflictException(Error.INVALID_BOOKING_STATUS,
-                    "Переход " + booking.getStatus() + " -> CONFIRMED недопустим");
+                "Переход " + booking.getStatus() + " -> CONFIRMED недопустим");
         }
 
         // проверяем что платёж ещё не инициирован (защита от гонки)
@@ -53,7 +53,7 @@ public class PaymentProcessingService {
 
         // проверяем что HOLD не просрочен
         LocalDateTime holdExpiry = booking.getCreatedAt()
-                .plusMinutes(bookingProperties.getHoldTimeoutMinutes());
+            .plusMinutes(bookingProperties.getHoldTimeoutMinutes());
         if (LocalDateTime.now().isAfter(holdExpiry)) {
             booking.setStatus(BookingStatus.CANCELLED);
             booking.setUpdatedAt(LocalDateTime.now());
@@ -64,7 +64,7 @@ public class PaymentProcessingService {
         Long expectedAmount = currencyConverter.convert(booking.getTotalPrice(), request.currency());
         if (!request.amount().equals(expectedAmount)) {
             throw new ConflictException(Error.PAYMENT_AMOUNT_MISMATCH,
-                    "Ожидается: " + expectedAmount + " " + request.currency() + ", получено: " + request.amount());
+                "Ожидается: " + expectedAmount + " " + request.currency() + ", получено: " + request.amount());
         }
 
         // фиксируем что платёж инициирован — второй поток увидит не HOLD
@@ -74,26 +74,25 @@ public class PaymentProcessingService {
         return paymentMapper.map(request, booking);
     }
 
-    // Фаза 3: короткая транзакция — сохраняем результат платежа
+    // Фаза 3: короткая транзакция — сохраняем результат платежа, возвращает актуальную сущность
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public BookingStatus savePaymentResult(Long bookingId, PaymentResponse paymentResponse) {
+    public BookingEntity savePaymentResult(Long bookingId, PaymentResponse paymentResponse) {
         BookingEntity booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND));
+            .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND));
 
         // сохраняем аудит-лог платежа
         PaymentTransactionEntity paymentLog = PaymentTransactionEntity.builder()
-                .transactionId(paymentResponse.id())
-                .booking(booking)
-                .referenceId(paymentResponse.referenceId())
-                .status(paymentResponse.status().name())
-                .amount(paymentResponse.amount())
-                .currency(paymentResponse.currency().name())
-                .transactionCreatedAt(paymentResponse.createdAt())
-                .createdAt(LocalDateTime.now())
-                .build();
+            .transactionId(paymentResponse.id())
+            .booking(booking)
+            .referenceId(paymentResponse.referenceId())
+            .status(paymentResponse.status().name())
+            .amount(paymentResponse.amount())
+            .currency(paymentResponse.currency().name())
+            .transactionCreatedAt(paymentResponse.createdAt())
+            .createdAt(LocalDateTime.now())
+            .build();
         paymentTransactionRepository.save(paymentLog);
 
-        // сохраняем реальный ID транзакции из платёжного сервиса
         booking.setPaymentId(paymentResponse.id());
 
         if (BookingStatus.isPaymentSuccessful(paymentResponse.status())) {
@@ -104,8 +103,6 @@ public class PaymentProcessingService {
             booking.setPaymentId(null);
         }
 
-        booking.setUpdatedAt(LocalDateTime.now());
-
-        return booking.getStatus();
+        return bookingRepository.save(booking);
     }
 }

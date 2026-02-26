@@ -1,11 +1,14 @@
 package uz.stajirovka.jbooking.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +31,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/bookings")
 @RequiredArgsConstructor
+@Validated
 public class BookingController {
 
     private final BookingService bookingService;
@@ -39,41 +43,39 @@ public class BookingController {
             .body(bookingService.initBooking(request));
     }
 
-
     @PostMapping("/confirm")
     public ResponseEntity<BookingConfirmResponse> confirmBooking(@Valid @RequestBody BookingConfirmRequest request) {
-        return  ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity.status(HttpStatus.OK)
             .body(bookingService.confirmBooking(request));
     }
 
-
     @GetMapping("/{id}")
-    public ResponseEntity<BookingResponse> getById(@PathVariable Long id,
-                                                    @RequestParam(defaultValue = "UZS") Currency currency) {
+    public ResponseEntity<BookingResponse> getById(@PathVariable @Positive Long id,
+                                                   @RequestParam(defaultValue = "UZS") Currency currency) {
         return ResponseEntity.ok(bookingService.getById(id, currency));
     }
 
     @GetMapping("/my")
     public ResponseEntity<Slice<BookingResponse>> getAllByUser(
-            @RequestParam String pinfl,
-            @RequestParam(defaultValue = "UZS") Currency currency,
-            Pageable pageable) {
+        @RequestParam @NotBlank String pinfl,
+        @RequestParam(defaultValue = "UZS") Currency currency,
+        Pageable pageable) {
         return ResponseEntity.ok(bookingService.getAllByPinfl(pinfl, currency, pageable));
     }
 
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<BookingResponse> cancel(@PathVariable Long id) {
+    public ResponseEntity<BookingResponse> cancel(@PathVariable @Positive Long id) {
         return ResponseEntity.ok(bookingStatusService.cancel(id));
     }
 
     @PutMapping("/{id}/modify")
     public ResponseEntity<BookingResponse> modify(
-        @PathVariable Long id, @Valid @RequestBody BookingModifyRequest request) {
+        @PathVariable @Positive Long id, @Valid @RequestBody BookingModifyRequest request) {
         return ResponseEntity.ok(bookingStatusService.modify(id, request));
     }
 
     @GetMapping("/{id}/refund-info")
-    public ResponseEntity<Map<String, Object>> getRefundInfo(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getRefundInfo(@PathVariable @Positive Long id) {
         Long amount = bookingStatusService.getRefundAmount(id);
         int percent = bookingStatusService.getRefundPercent(id);
         return ResponseEntity.ok(Map.of(
@@ -81,5 +83,4 @@ public class BookingController {
             "refundPercent", percent
         ));
     }
-
 }

@@ -19,7 +19,7 @@ CREATE UNIQUE INDEX uk_guests_pinfl ON guests(pinfl) WHERE pinfl IS NOT NULL AND
 
 -- bookings (2 индекса)
 CREATE INDEX idx_bookings_hotel_room ON bookings(hotel_id, room_id);
-CREATE INDEX idx_bookings_guest ON bookings(guest_id);
+CREATE INDEX idx_bookings_guest ON bookings(main_guest_id);
 
 -- booking_additional_guests (1 индекс)
 CREATE INDEX idx_additional_guests_guest ON booking_additional_guests(guest_id);

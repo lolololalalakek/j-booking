@@ -2,17 +2,17 @@ package uz.stajirovka.jbooking.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.stajirovka.jbooking.constant.enums.Error;
 import uz.stajirovka.jbooking.dto.request.HotelReviewRequest;
-import uz.stajirovka.jbooking.dto.response.HotelRatingResponse;
 import uz.stajirovka.jbooking.dto.response.HotelReviewResponse;
+import uz.stajirovka.jbooking.dto.response.HotelReviewsResponse;
 import uz.stajirovka.jbooking.entity.GuestEntity;
 import uz.stajirovka.jbooking.entity.HotelEntity;
 import uz.stajirovka.jbooking.entity.HotelReviewEntity;
 import uz.stajirovka.jbooking.exception.ConflictException;
+import uz.stajirovka.jbooking.exception.ForbiddenException;
 import uz.stajirovka.jbooking.exception.NotFoundException;
 import uz.stajirovka.jbooking.mapper.HotelReviewMapper;
 import uz.stajirovka.jbooking.repository.GuestRepository;
@@ -35,18 +35,12 @@ public class HotelReviewServiceImpl implements HotelReviewService {
     @Override
     @Transactional
     public HotelReviewResponse create(Long hotelId, HotelReviewRequest request) {
-        // валидируем что hotelId из path совпадает с hotelId из body
-        if (!hotelId.equals(request.hotelId())) {
-            throw new ConflictException(Error.REVIEW_HOTEL_MISMATCH,
-                    "hotelId в URL (" + hotelId + ") не совпадает с hotelId в теле запроса (" + request.hotelId() + ")");
-        }
-
         // проверяем что отзыв от этого гостя ещё не существует
-        if (reviewRepository.existsByHotelIdAndGuestId(request.hotelId(), request.guestId())) {
+        if (reviewRepository.existsByHotelIdAndGuestId(hotelId, request.guestId())) {
             throw new ConflictException(Error.REVIEW_ALREADY_EXISTS);
         }
 
-        HotelEntity hotel = findHotelById(request.hotelId());
+        HotelEntity hotel = findHotelById(hotelId);
         GuestEntity guest = findGuestById(request.guestId());
 
         HotelReviewEntity entity = new HotelReviewEntity();
@@ -60,49 +54,35 @@ public class HotelReviewServiceImpl implements HotelReviewService {
     }
 
     @Override
-    public Slice<HotelReviewResponse> getByHotelId(Long hotelId, Pageable pageable) {
-        return reviewRepository.findByHotelId(hotelId, pageable)
-                .map(hotelReviewMapper::toResponse);
-    }
-
-
-
-    @Override
-    @Transactional
-    public void delete(Long hotelId, Long reviewId) {
-        HotelReviewEntity entity = findById(reviewId);
-        if (!entity.getHotel().getId().equals(hotelId)) {
-            throw new ConflictException(Error.REVIEW_HOTEL_MISMATCH,
-                    "Отзыв id=" + reviewId + " не принадлежит отелю id=" + hotelId);
-        }
-        reviewRepository.delete(entity);
-    }
-
-    @Override
-    public HotelRatingResponse getHotelRating(Long hotelId) {
+    public HotelReviewsResponse getByHotelId(Long hotelId, Pageable pageable) {
         findHotelById(hotelId);
 
+        var reviews = reviewRepository.findByHotelId(hotelId, pageable)
+            .map(hotelReviewMapper::toResponse);
         Double avgRating = reviewRepository.getAverageRating(hotelId);
         long count = reviewRepository.countByHotelId(hotelId);
 
-        return new HotelRatingResponse(hotelId, avgRating, count);
+        return new HotelReviewsResponse(avgRating, count, reviews);
     }
 
-    // поиск отзыва по id
-    private HotelReviewEntity findById(Long id) {
-        return reviewRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(Error.REVIEW_NOT_FOUND, "id=" + id));
+    @Override
+    @Transactional
+    public void delete(Long hotelId, Long reviewId, Long mainGuestId) {
+        HotelReviewEntity entity = reviewRepository
+            .findByIdAndHotelIdAndGuestId(reviewId, hotelId, mainGuestId)
+            .orElseThrow(() -> new ForbiddenException(Error.REVIEW_ACCESS_DENIED));
+        reviewRepository.delete(entity);
     }
 
     // поиск отеля по id
     private HotelEntity findHotelById(Long id) {
         return hotelRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "id=" + id));
+            .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "id=" + id));
     }
 
     // поиск гостя по id
     private GuestEntity findGuestById(Long id) {
         return guestRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(Error.GUEST_NOT_FOUND, "id=" + id));
+            .orElseThrow(() -> new NotFoundException(Error.GUEST_NOT_FOUND, "id=" + id));
     }
 }

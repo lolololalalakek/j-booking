@@ -3,10 +3,6 @@ spring:
     name: j-booking
 
 
-  web:
-    resources:
-      add-mappings: false
-
   data:
     web:
       pageable:
@@ -30,15 +26,16 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
-    clean-disabled: true
+    clean-disabled: false
 
 # бизнес-параметры бронирования
 booking:
   min-nights: 1
-  main-guest-count: 1
-  hold-timeout-minutes: 1
+  hold-timeout-minutes: 3
+  hold-check-interval-ms: 60000
   payment-processing-timeout-minutes: 1
-  payment-processing-check-interval-ms: 60000
+  payment-processing-check-interval-ms: 30000
+  batch-size: 100
   cancellation:
     full-refund-hours: 72
     partial-refund-hours: 24
@@ -46,23 +43,27 @@ booking:
     partial-refund-percent: 50
     no-refund-percent: 0
 
-# параметры валидации
-validation:
-  min-stars: 1
-  max-stars: 5
-  min-rating: 1
-  max-rating: 5
-  min-guests: 1
 
 # курсы валют (сколько сум за 1 единицу валюты)
 currency:
   usd-rate: 12000
-  rub-rate: 1500
+  rub-rate: 150
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui/index.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
 
 client:
   payment:
     url: http://localhost:7071
-
+  notification:
+    url: https://http://217.29.121.129/notification_api
+    login: but3r
+    password: zwm1nja3nwqtnjiyyy
 spring.cloud.openfeign.client.config:
   paymentClient:
     connect-timeout: 5000

@@ -28,20 +28,20 @@ public class HotelServiceImpl implements HotelService {
     public HotelResponse getById(Long id) {
         HotelEntity hotel = findById(id);
         CityEntity city = cityRepository.findByHotelId(id)
-                .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "hotelId=" + id));
+            .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "hotelId=" + id));
         return hotelMapper.toResponse(hotel, city);
     }
 
     @Override
     public Slice<HotelResponse> getByCityId(Long cityId, Pageable pageable) {
         CityEntity city = cityRepository.findById(cityId)
-                .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "id=" + cityId));
+            .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "id=" + cityId));
         return hotelRepository.findByCityId(cityId, pageable)
-                .map(hotel -> hotelMapper.toResponse(hotel, city));
+            .map(hotel -> hotelMapper.toResponse(hotel, city));
     }
 
     private HotelEntity findById(Long id) {
         return hotelRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "id=" + id));
+            .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "id=" + id));
     }
 }

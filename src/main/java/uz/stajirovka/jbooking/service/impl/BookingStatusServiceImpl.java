@@ -43,10 +43,10 @@ public class BookingStatusServiceImpl implements BookingStatusService {
 
     // допустимые переходы статусов
     private static final Set<BookingStatus> CANCELLABLE_STATUSES = Set.of(
-            BookingStatus.HOLD, BookingStatus.CONFIRMED, BookingStatus.MODIFIED
+        BookingStatus.HOLD, BookingStatus.CONFIRMED, BookingStatus.MODIFIED
     );
     private static final Set<BookingStatus> MODIFIABLE_STATUSES = Set.of(
-            BookingStatus.HOLD, BookingStatus.CONFIRMED, BookingStatus.MODIFIED
+        BookingStatus.HOLD, BookingStatus.CONFIRMED, BookingStatus.MODIFIED
     );
 
     @Override
@@ -68,26 +68,26 @@ public class BookingStatusServiceImpl implements BookingStatusService {
         validateTransition(booking, MODIFIABLE_STATUSES, BookingStatus.MODIFIED);
 
         long nights = BookingDateValidator.validateAndCalculateNights(
-                request.checkInDate(), request.checkOutDate(), bookingProperties.getMinNights());
+            request.checkInDate(), request.checkOutDate(), bookingProperties.getMinNights());
 
         // получаем новый номер с pessimistic lock по цепочке город -> отель -> комната
         RoomEntity newRoom = findRoomWithLock(request.cityId(), request.hotelId(), request.roomId());
 
         // проверяем вместимость нового номера
-        int totalGuests = bookingProperties.getMainGuestCount()
-                + (booking.getAdditionalGuests() != null ? booking.getAdditionalGuests().size() : 0);
+        int totalGuests = 1
+            + (booking.getAdditionalGuests() != null ? booking.getAdditionalGuests().size() : 0);
         if (totalGuests > newRoom.getCapacity()) {
             throw new ConflictException(Error.ROOM_CAPACITY_EXCEEDED,
-                    "Гостей: " + totalGuests + ", вместимость: " + newRoom.getCapacity());
+                "Гостей: " + totalGuests + ", вместимость: " + newRoom.getCapacity());
         }
 
         // проверяем доступность нового номера (исключая текущее бронирование)
         boolean hasOverlap = bookingRepository.existsOverlappingBookingExcluding(
-                request.roomId(),
-                request.checkInDate(),
-                request.checkOutDate(),
-                BookingStatus.CANCELLED,
-                bookingId
+            request.roomId(),
+            request.checkInDate(),
+            request.checkOutDate(),
+            BookingStatus.CANCELLED,
+            bookingId
         );
         if (hasOverlap) {
             throw new ConflictException(Error.ROOM_NOT_AVAILABLE);
@@ -95,9 +95,9 @@ public class BookingStatusServiceImpl implements BookingStatusService {
 
         // находим отель и город для обновления бронирования
         HotelEntity hotel = hotelRepository.findByRoomId(newRoom.getId())
-                .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "roomId=" + newRoom.getId()));
+            .orElseThrow(() -> new NotFoundException(Error.HOTEL_NOT_FOUND, "roomId=" + newRoom.getId()));
         CityEntity city = cityRepository.findByHotelId(hotel.getId())
-                .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "hotelId=" + hotel.getId()));
+            .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "hotelId=" + hotel.getId()));
 
         // обновляем бронирование (включая город и отель для консистентности)
         booking.setCity(city);
@@ -128,21 +128,21 @@ public class BookingStatusServiceImpl implements BookingStatusService {
     // поиск бронирования по id
     private BookingEntity findById(Long id) {
         return bookingRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND, "id=" + id));
+            .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND, "id=" + id));
     }
 
     // поиск комнаты по цепочке город -> отель -> комната с блокировкой (pessimistic lock)
     private RoomEntity findRoomWithLock(Long cityId, Long hotelId, Long roomId) {
         return roomRepository.findByIdAndHotelIdAndCityIdWithLock(roomId, hotelId, cityId)
-                .orElseThrow(() -> new NotFoundException(Error.ROOM_NOT_FOUND,
-                        "cityId=" + cityId + ", hotelId=" + hotelId + ", roomId=" + roomId));
+            .orElseThrow(() -> new NotFoundException(Error.ROOM_NOT_FOUND,
+                "cityId=" + cityId + ", hotelId=" + hotelId + ", roomId=" + roomId));
     }
 
     // валидация перехода статуса
     private void validateTransition(BookingEntity booking, Set<BookingStatus> allowedStatuses, BookingStatus targetStatus) {
         if (!allowedStatuses.contains(booking.getStatus())) {
             throw new ConflictException(Error.INVALID_BOOKING_STATUS,
-                    "Переход " + booking.getStatus() + " -> " + targetStatus + " недопустим");
+                "Переход " + booking.getStatus() + " -> " + targetStatus + " недопустим");
         }
     }
 }

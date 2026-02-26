@@ -29,11 +29,11 @@ public class CityServiceImpl implements CityService {
     @Override
     public Slice<CityResponse> getAll(Pageable pageable) {
         return cityRepository.findAllBy(pageable)
-                .map(cityMapper::toResponse);
+            .map(cityMapper::toResponse);
     }
 
     private CityEntity findById(Long id) {
         return cityRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "id=" + id));
+            .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "id=" + id));
     }
 }

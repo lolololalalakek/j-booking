@@ -9,23 +9,23 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 public record RoomSearchRequest(
-        // обязательные параметры
-        @NotNull(message = "Дата заезда обязательна")
-        @Future(message = "Дата заезда должна быть в будущем")
-        LocalDateTime checkInDate,
+    // обязательные параметры
+    @NotNull(message = "Дата заезда обязательна")
+    @Future(message = "Дата заезда должна быть в будущем")
+    LocalDateTime checkInDate,
 
-        @NotNull(message = "Дата выезда обязательна")
-        @Future(message = "Дата выезда должна быть в будущем")
-        LocalDateTime checkOutDate,
+    @NotNull(message = "Дата выезда обязательна")
+    @Future(message = "Дата выезда должна быть в будущем")
+    LocalDateTime checkOutDate,
 
-        @NotNull(message = "Количество гостей обязательно")
-        @Min(value = 1, message = "Минимум 1 гость")
-        Integer guests,
+    @NotNull(message = "Количество гостей обязательно")
+    @Min(value = 1, message = "Минимум 1 гость")
+    Integer guests,
 
-        // опциональные фильтры
-        Long cityId,
-        Long hotelId,
-        Long minPrice,
-        Long maxPrice,
-        Set<Amenity> amenities
+    // опциональные фильтры
+    Long cityId,
+    Long hotelId,
+    Long minPrice,
+    Long maxPrice,
+    Set<Amenity> amenities
 ) {}

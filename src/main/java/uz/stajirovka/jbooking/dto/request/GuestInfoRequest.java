@@ -5,18 +5,18 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public record GuestInfoRequest(
-        @NotBlank(message = "Имя обязательно")
-        String firstName,
+    @NotBlank(message = "Имя обязательно")
+    String firstName,
 
-        @NotBlank(message = "Фамилия обязательна")
-        String lastName,
+    @NotBlank(message = "Фамилия обязательна")
+    String lastName,
 
-        @NotBlank(message = "ПИНФЛ обязателен")
-        @Pattern(regexp = "\\d{14}", message = "ПИНФЛ должен содержать 14 цифр")
-        String pinfl,
+    @NotBlank(message = "ПИНФЛ обязателен")
+    @Pattern(regexp = "\\d{14}", message = "ПИНФЛ должен содержать 14 цифр")
+    String pinfl,
 
-        @Email(message = "Неверный формат email")
-        String email,
+    @Email(message = "Неверный формат email")
+    String email,
 
-        String phone
+    String phone
 ) {}
