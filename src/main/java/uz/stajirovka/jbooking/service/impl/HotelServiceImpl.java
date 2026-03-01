@@ -6,6 +6,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uz.stajirovka.jbooking.constant.enums.Amenity;
 import uz.stajirovka.jbooking.constant.enums.Error;
 import uz.stajirovka.jbooking.dto.response.HotelResponse;
@@ -40,6 +41,7 @@ public class HotelServiceImpl implements HotelService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public Slice<HotelResponse> getByCityId(Long cityId, Pageable pageable) {
         CityEntity city = cityRepository.findById(cityId)
             .orElseThrow(() -> new NotFoundException(Error.CITY_NOT_FOUND, "id=" + cityId));
@@ -48,6 +50,7 @@ public class HotelServiceImpl implements HotelService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Slice<HotelResponse> search(LocalDateTime checkInDate,
                                        LocalDateTime checkOutDate,
                                        Integer guests,
@@ -108,4 +111,3 @@ public class HotelServiceImpl implements HotelService {
         return hotelMapper.toResponse(hotel, city, new SliceImpl<>(roomResponses));
     }
 }
-

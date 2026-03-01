@@ -18,11 +18,11 @@ public class BookingProperties {
     // интервал проверки просроченных HOLD бронирований (мс)
     private int holdCheckIntervalMs;
 
-    // таймаут для статуса PAYMENT_PROCESSING (мин) — после него recovery-шедулер сбрасывает в HOLD
-    private int paymentProcessingTimeoutMinutes;
+    // тайм-аут для статуса CONFIRMED (мин) — после него шедулер сбрасывает обратно в HOLD
+    private int confirmedTimeoutMinutes;
 
-    // интервал проверки застрявших PAYMENT_PROCESSING бронирований (мс)
-    private int paymentProcessingCheckIntervalMs;
+    // интервал проверки просроченных CONFIRMED бронирований (мс)
+    private int confirmedCheckIntervalMs;
 
     // размер батча при пакетной обработке бронирований в шедулерах
     private int batchSize;

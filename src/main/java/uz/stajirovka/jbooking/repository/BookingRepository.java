@@ -57,4 +57,16 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
         Pageable pageable
     );
 
+    // поиск просроченных бронирований в статусе CONFIRMED (батчами)
+    @Query("""
+        SELECT b FROM BookingEntity b
+        WHERE b.status = :confirmedStatus
+          AND b.updatedAt < :expiredBefore
+        """)
+    Slice<BookingEntity> findExpiredConfirmed(
+        @Param("confirmedStatus") BookingStatus confirmedStatus,
+        @Param("expiredBefore") LocalDateTime expiredBefore,
+        Pageable pageable
+    );
+
 }

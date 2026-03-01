@@ -20,6 +20,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import uz.stajirovka.jbooking.constant.enums.AccommodationType;
 
 import java.time.LocalDateTime;
@@ -56,9 +58,11 @@ public class HotelEntity {
     AccommodationType accommodationType;
 
     @Column(nullable = false)
+    @CreationTimestamp
     LocalDateTime createdAt;
 
     @Column(nullable = false)
+    @UpdateTimestamp
     LocalDateTime updatedAt;
 
     @Column(name = "deleted_at")

@@ -21,6 +21,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import uz.stajirovka.jbooking.constant.enums.Amenity;
 import uz.stajirovka.jbooking.constant.enums.MealPlan;
 import uz.stajirovka.jbooking.constant.enums.RoomType;
@@ -74,9 +76,11 @@ public class RoomEntity {
     String description;
 
     @Column(nullable = false)
+    @CreationTimestamp
     LocalDateTime createdAt;
 
     @Column(nullable = false)
+    @UpdateTimestamp
     LocalDateTime updatedAt;
 
     @Column(name = "deleted_at")

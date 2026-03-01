@@ -46,8 +46,8 @@ booking:
   min-nights: 1
   hold-timeout-minutes: 3
   hold-check-interval-ms: 60000
-  payment-processing-timeout-minutes: 1
-  payment-processing-check-interval-ms: 30000
+  confirmed-timeout-minutes: 1
+  confirmed-check-interval-ms: 30000
   batch-size: 100
   cancellation:
     full-refund-hours: 72
@@ -69,6 +69,12 @@ springdoc:
     operations-sorter: alpha
   api-docs:
     path: /v3/api-docs
+
+vaadin:
+  devmode:
+    usageStatistics:
+      enabled: false
+
 client:
   notification:
     login: but3r

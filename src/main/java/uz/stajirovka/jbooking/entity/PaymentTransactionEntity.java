@@ -18,6 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 import uz.stajirovka.jbooking.constant.enums.TransactionStatus;
 
 import java.time.LocalDateTime;
@@ -61,5 +62,6 @@ public class PaymentTransactionEntity {
     LocalDateTime transactionCreatedAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
     LocalDateTime createdAt;
 }

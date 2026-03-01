@@ -23,12 +23,12 @@ public class NotificationProcessorServiceImpl implements NotificationProcessorSe
 
     @Override
     public void process(BookingEntity entity) {
-        GuestEntity mainGuest = entity.getMainGuest();
-        ReceiverDto receiverDto = new ReceiverDto(null, mainGuest.getEmail(), null);
-        NotificationRequest request = new NotificationRequest(
-            receiverDto, NotificationType.EMAIL, String.format(MESSAGE, entity.getId())
-        );
         try {
+            GuestEntity mainGuest = entity.getMainGuest();
+            ReceiverDto receiverDto = new ReceiverDto(null, mainGuest.getEmail(), null);
+            NotificationRequest request = new NotificationRequest(
+                receiverDto, NotificationType.EMAIL, String.format(MESSAGE, entity.getId())
+            );
             NotificationResponse notificationResponse = notificationClient
                 .sendNotification(request)
                 .data();
