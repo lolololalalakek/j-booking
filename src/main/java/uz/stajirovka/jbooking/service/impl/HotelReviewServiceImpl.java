@@ -48,6 +48,7 @@ public class HotelReviewServiceImpl implements HotelReviewService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public HotelReviewsResponse getByHotelId(Long hotelId, Pageable pageable) {
         findHotelById(hotelId);
 

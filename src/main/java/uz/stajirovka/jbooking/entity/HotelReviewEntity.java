@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -48,5 +49,6 @@ public class HotelReviewEntity {
     String description;
 
     @Column(name = "created_at", nullable = false)
+    @CreationTimestamp
     LocalDateTime createdAt;
 }

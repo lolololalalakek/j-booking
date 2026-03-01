@@ -110,6 +110,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingConfirmResponse payConfirmedBooking(BookingPaymentRequest request) {
         Long bookingId = request.bookingId();
         BookingEntity booking = bookingRepository.findByIdAndStatus(bookingId, BookingStatus.CONFIRMED)
@@ -134,7 +135,7 @@ public class BookingServiceImpl implements BookingService {
         if (updated.getStatus() == BookingStatus.PAID) {
             notificationProcessorService.process(updated);
         }
-        bookingRepository.save(booking);
+        bookingRepository.save(updated);
 
         return new BookingConfirmResponse(updated.getStatus(), bookingId, paymentResponse.id());
     }
@@ -149,11 +150,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BookingResponse getById(Long id, Currency currency) {
         return bookingMapper.withConvertedPrices(bookingMapper.toResponse(findById(id)), currency, currencyConverterService);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Slice<BookingResponse> getAllByPinfl(String pinfl, Currency currency, Pageable pageable) {
         return bookingRepository.findByGuestPinfl(pinfl, pageable)
             .map(bookingMapper::toResponse)
