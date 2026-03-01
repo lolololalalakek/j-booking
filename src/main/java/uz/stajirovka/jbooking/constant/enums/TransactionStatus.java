@@ -6,18 +6,16 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum TransactionStatus {
-    CREATED(false),
-    SENDER_INFO_VALIDATED(false),
-    SENDER_INFO_VALIDATION_FAILED(true),
-    RECEIVER_INFO_VALIDATED(false),
-    RECEIVER_INFO_VALIDATION_FAILED(true),
-    AMOUNT_VALIDATED(false),
-    AMOUNT_VALIDATION_FAILED(true),
-    CALCULATE_FAILED(false),
-    PROCESSING_BY_LEDGER(false),
-    COMPLETED(true),
-    FAILED(true);
-
-    private final boolean isFailed;
+    CREATED,
+    SENDER_INFO_VALIDATED,
+    SENDER_INFO_VALIDATION_FAILED,
+    RECEIVER_INFO_VALIDATED,
+    RECEIVER_INFO_VALIDATION_FAILED,
+    AMOUNT_VALIDATED,
+    AMOUNT_VALIDATION_FAILED,
+    CALCULATE_FAILED,
+    SENT_TO_CORE_LEDGER,
+    SUCCESS,
+    FAILED
 }
 

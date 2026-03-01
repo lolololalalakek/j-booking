@@ -36,6 +36,8 @@ public enum Error {
     REVIEW_HOTEL_MISMATCH(40013, "Отзыв не принадлежит указанному отелю"),
     DUPLICATE_PAYMENT(40014, "Платёж по данному бронированию уже выполнен"),
 
+    ROOM_PRICE_EQUALS_TO_NEW(40015, "Цена не должна быть равной текущей!"),
+
     // Ошибки доступа (50xxx)
     REVIEW_ACCESS_DENIED(50001, "Нет доступа к отзыву");
 

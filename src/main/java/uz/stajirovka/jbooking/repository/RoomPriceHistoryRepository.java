@@ -7,11 +7,23 @@ import org.springframework.data.repository.query.Param;
 import uz.stajirovka.jbooking.entity.RoomPriceHistoryEntity;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface RoomPriceHistoryRepository extends JpaRepository<RoomPriceHistoryEntity, Long> {
 
     // Закрыть текущую запись цены
     @Modifying
-    @Query("UPDATE RoomPriceHistoryEntity h SET h.validTo = :validTo WHERE h.room.id = :roomId AND h.validTo IS NULL")
+    @Query("UPDATE RoomPriceHistoryEntity h " +
+        "SET h.validTo = :validTo " +
+        "WHERE h.room.id = :roomId " +
+        "AND h.validTo IS NULL")
     void closeCurrentPrice(@Param("roomId") Long roomId, @Param("validTo") LocalDateTime validTo);
+
+    @Query("""
+        SELECT r from RoomPriceHistoryEntity r
+        where r.room.id = :roomId
+         order by r.createdAt desc
+         limit 1
+        """)
+    Optional<RoomPriceHistoryEntity> findByRoomId(Long roomId);
 }

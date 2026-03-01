@@ -6,9 +6,11 @@ import jakarta.validation.constraints.Positive;
 import uz.stajirovka.jbooking.constant.enums.Currency;
 import uz.stajirovka.jbooking.constant.enums.TransactionType;
 
+import java.util.UUID;
+
 public record PaymentRequest(
     @NotNull(message = "referenceId required")
-    Long referenceId,
+    UUID referenceId,
 
     @NotNull(message = "transaction type required")
     TransactionType type,
@@ -29,6 +31,8 @@ public record PaymentRequest(
     String receiverName,
 
     @NotBlank(message = "receiverToken required")
-    String receiverToken
+    String receiverToken,
+    @NotNull
+    Long merchantId
 ) {
 }

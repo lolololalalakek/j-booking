@@ -1,10 +1,8 @@
 package uz.stajirovka.jbooking.repository;
 
-import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import uz.stajirovka.jbooking.constant.enums.BookingStatus;
@@ -15,9 +13,10 @@ import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT b FROM BookingEntity b WHERE b.id = :id")
-    Optional<BookingEntity> findByIdWithLock(@Param("id") Long id);
+    Optional<BookingEntity> findById(@Param("id") Long id);
+
+    Optional<BookingEntity> findByIdAndStatus(Long id, BookingStatus status);
 
     // получение бронирований гостя по ПИНФЛ (по основному гостю)
     @Query("""
@@ -45,22 +44,6 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
         @Param("cancelledStatus") BookingStatus cancelledStatus
     );
 
-    // проверка пересечения дат исключая указанное бронирование (для modify)
-    @Query("""
-        SELECT COUNT(b) > 0 FROM BookingEntity b
-        WHERE b.room.id = :roomId
-          AND b.id <> :excludeBookingId
-          AND b.status <> :cancelledStatus
-          AND b.checkInDate < :checkOutDate
-          AND b.checkOutDate > :checkInDate
-        """)
-    boolean existsOverlappingBookingExcluding(
-        @Param("roomId") Long roomId,
-        @Param("checkInDate") LocalDateTime checkInDate,
-        @Param("checkOutDate") LocalDateTime checkOutDate,
-        @Param("cancelledStatus") BookingStatus cancelledStatus,
-        @Param("excludeBookingId") Long excludeBookingId
-    );
 
     // поиск просроченных бронирований в статусе HOLD (батчами)
     @Query("""
@@ -74,15 +57,4 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
         Pageable pageable
     );
 
-    // поиск застрявших бронирований в статусе PAYMENT_PROCESSING (для recovery-шедулера)
-    @Query("""
-        SELECT b FROM BookingEntity b
-        WHERE b.status = :processingStatus
-          AND b.updatedAt < :stuckBefore
-        """)
-    Slice<BookingEntity> findStuckPaymentProcessing(
-        @Param("processingStatus") BookingStatus processingStatus,
-        @Param("stuckBefore") LocalDateTime stuckBefore,
-        Pageable pageable
-    );
 }

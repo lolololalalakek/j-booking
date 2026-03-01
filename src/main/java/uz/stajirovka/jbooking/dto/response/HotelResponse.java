@@ -1,5 +1,6 @@
 package uz.stajirovka.jbooking.dto.response;
 
+import org.springframework.data.domain.Slice;
 import uz.stajirovka.jbooking.constant.enums.AccommodationType;
 
 public record HotelResponse(
@@ -9,6 +10,7 @@ public record HotelResponse(
     String name,
     String description,
     Integer stars,
-    AccommodationType accommodationType
+    AccommodationType accommodationType,
+    Slice<RoomResponse> rooms
 ) {
 }

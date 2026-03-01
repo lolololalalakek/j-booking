@@ -1,25 +1,18 @@
 package uz.stajirovka.jbooking.controller;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uz.stajirovka.jbooking.constant.enums.Currency;
-import uz.stajirovka.jbooking.dto.request.RoomSearchRequest;
 import uz.stajirovka.jbooking.dto.response.RoomResponse;
-import uz.stajirovka.jbooking.service.RoomSearchService;
 import uz.stajirovka.jbooking.service.RoomService;
 
 @RestController
@@ -29,26 +22,13 @@ import uz.stajirovka.jbooking.service.RoomService;
 public class RoomController {
 
     private final RoomService roomService;
-    private final RoomSearchService roomSearchService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<RoomResponse> getById(@PathVariable @Positive Long id,
-                                                @RequestParam(defaultValue = "UZS") Currency currency) {
-        return ResponseEntity.ok(roomService.getById(id, currency));
-    }
-
-    @PostMapping("/search")
-    public ResponseEntity<Slice<RoomResponse>> search(
-        @Valid @RequestBody RoomSearchRequest request,
-        @RequestParam(defaultValue = "UZS") Currency currency,
-        Pageable pageable) {
-        return ResponseEntity.ok(roomSearchService.search(request, currency, pageable));
-    }
-
-    // обновление цены комнаты (для админов)
-    @PatchMapping("/{id}/price")
-    public ResponseEntity<RoomResponse> updatePrice(@PathVariable @Positive Long id,
-                                                    @RequestParam @NotNull @Positive Long price) {
-        return ResponseEntity.ok(roomService.updatePrice(id, price));
+    @GetMapping
+    public ResponseEntity<Slice<RoomResponse>> findRooom(@RequestParam @Positive long cityId,
+                                                         @RequestParam @Positive long hotelId,
+                                                         @RequestParam(defaultValue = "UZS") Currency currency,
+                                                         @RequestParam(defaultValue = "0") @PositiveOrZero int pageNumber,
+                                                         @RequestParam(defaultValue = "10") @Positive int pageSize) {
+        return ResponseEntity.ok(roomService.getByHotelId(cityId, hotelId, currency, PageRequest.of(pageNumber, pageSize)));
     }
 }

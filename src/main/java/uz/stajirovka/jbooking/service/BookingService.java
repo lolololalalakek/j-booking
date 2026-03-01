@@ -5,6 +5,7 @@ import org.springframework.data.domain.Slice;
 import uz.stajirovka.jbooking.constant.enums.Currency;
 import uz.stajirovka.jbooking.dto.request.BookingConfirmRequest;
 import uz.stajirovka.jbooking.dto.request.BookingCreateRequest;
+import uz.stajirovka.jbooking.dto.request.BookingPaymentRequest;
 import uz.stajirovka.jbooking.dto.response.BookingConfirmResponse;
 import uz.stajirovka.jbooking.dto.response.BookingResponse;
 
@@ -13,6 +14,9 @@ public interface BookingService {
     BookingResponse initBooking(BookingCreateRequest request);
 
     BookingConfirmResponse confirmBooking(BookingConfirmRequest request);
+    BookingConfirmResponse payConfirmedBooking(BookingPaymentRequest request);
+
+    BookingResponse cancel(Long bookingId);
 
     BookingResponse getById(Long id, Currency currency);
 

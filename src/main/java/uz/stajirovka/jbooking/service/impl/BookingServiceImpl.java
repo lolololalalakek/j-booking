@@ -12,6 +12,7 @@ import uz.stajirovka.jbooking.constant.enums.Currency;
 import uz.stajirovka.jbooking.constant.enums.Error;
 import uz.stajirovka.jbooking.dto.request.BookingConfirmRequest;
 import uz.stajirovka.jbooking.dto.request.BookingCreateRequest;
+import uz.stajirovka.jbooking.dto.request.BookingPaymentRequest;
 import uz.stajirovka.jbooking.dto.request.GuestInfoRequest;
 import uz.stajirovka.jbooking.dto.request.PaymentRequest;
 import uz.stajirovka.jbooking.dto.response.BookingConfirmResponse;
@@ -21,7 +22,6 @@ import uz.stajirovka.jbooking.entity.BookingEntity;
 import uz.stajirovka.jbooking.entity.GuestEntity;
 import uz.stajirovka.jbooking.entity.RoomEntity;
 import uz.stajirovka.jbooking.exception.ConflictException;
-import uz.stajirovka.jbooking.exception.InternalException;
 import uz.stajirovka.jbooking.exception.NotFoundException;
 import uz.stajirovka.jbooking.exception.ValidationException;
 import uz.stajirovka.jbooking.mapper.BookingMapper;
@@ -42,7 +42,6 @@ import java.util.Set;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
@@ -53,36 +52,32 @@ public class BookingServiceImpl implements BookingService {
     private final CurrencyConverterService currencyConverterService;
     private final BookingProperties bookingProperties;
     private final PaymentExecutor paymentExecutor;
-    private final PaymentProcessingService paymentProcessingService;
+    private final PaymentRequestValidationService paymentRequestValidationService;
+    private final PaymentResultHandlerService paymentResultHandlerService;
     private final NotificationProcessorService notificationProcessorService;
 
-    // создание нового бронирования
     @Override
-    @Transactional
+    @Transactional // инициализация букинга
     public BookingResponse initBooking(BookingCreateRequest request) {
         long nights = BookingDateValidator.validateAndCalculateNights(
             request.checkInDate(), request.checkOutDate(), bookingProperties.getMinNights());
 
-        // сразу берём lock — другая транзакция не займёт комнату пока мы работаем
-        // hotel и city загружены через JOIN FETCH в lock-запросе
         RoomEntity room = findRoomWithLock(request.cityId(), request.hotelId(), request.roomId());
 
-        // проверка доступности под lock
         if (bookingRepository.existsOverlappingBooking(
             request.roomId(), request.checkInDate(), request.checkOutDate(), BookingStatus.CANCELLED)) {
             throw new ConflictException(Error.ROOM_NOT_AVAILABLE);
         }
-
-        // проверка вместимости под lock
+        //проставляем кол-во гостей. по дефолту всегда 1 + доп гости (если будут указаны)
         int totalGuests = 1 + (request.additionalGuests() != null ? request.additionalGuests().size() : 0);
         if (totalGuests > room.getCapacity()) {
             throw new ValidationException(Error.VALIDATION_ERROR,
-                "Количество гостей (" + totalGuests + ") превышает вместимость номера (" + room.getCapacity() + ")");
+                "Guest count (" + totalGuests + ") exceeds room capacity (" + room.getCapacity() + ")");
         }
-
-        // создаём гостей только после того как убедились что комната свободна
+        // находим или создаем основного гостя
         GuestEntity mainGuest = guestService.findOrCreateGuest(request.mainGuest());
 
+        // здесь мы создаем для доп гостей хеш-сет.
         Set<GuestEntity> additionalGuests = new HashSet<>();
         if (request.additionalGuests() != null) {
             for (GuestInfoRequest guestInfo : request.additionalGuests()) {
@@ -90,44 +85,68 @@ public class BookingServiceImpl implements BookingService {
             }
         }
 
+        Long totalPrice = bookingPriceService.calculate(room, nights);
+        LocalDateTime now = LocalDateTime.now();
+        BookingEntity booking = bookingMapper.toEntity(
+            request, room, mainGuest, additionalGuests, totalPrice, totalGuests, now);
+
         return bookingMapper.toResponse(
-            bookingRepository.save(buildBooking(request, room, mainGuest, additionalGuests, nights)));
+            bookingRepository.save(booking));
     }
 
-    // confirmBooking БЕЗ @Transactional — оркестрирует 3 фазы
-    // внешний вызов платёжки не должен держать DB-соединение открытым
     @Override
+    @Transactional
     public BookingConfirmResponse confirmBooking(BookingConfirmRequest request) {
+        BookingEntity booking = bookingRepository.findById(request.bookingId())
+            .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND));
+
+        if (booking.getStatus() != BookingStatus.HOLD) {
+            throw new ConflictException(Error.INVALID_BOOKING_STATUS,
+                "Transition " + booking.getStatus() + " -> CONFIRMED is not allowed");
+        }
+        booking.setStatus(BookingStatus.CONFIRMED);
+        BookingEntity updated = bookingRepository.save(booking);
+        return new BookingConfirmResponse(updated.getStatus(), updated.getId(), updated.getPaymentId());
+    }
+
+    @Override
+    public BookingConfirmResponse payConfirmedBooking(BookingPaymentRequest request) {
         Long bookingId = request.bookingId();
+        BookingEntity booking = bookingRepository.findByIdAndStatus(bookingId, BookingStatus.CONFIRMED)
+            .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND));
 
-        // фаза 1: короткая транзакция — lock, валидация, HOLD -> PAYMENT_PROCESSING
-        PaymentRequest paymentRequest = paymentProcessingService.validateAndLock(bookingId, request);
-
-        // HOLD просрочен — фаза 1 уже поставила CANCELLED
+        PaymentRequest paymentRequest = paymentRequestValidationService.validate(booking, request);
         if (paymentRequest == null) {
             return new BookingConfirmResponse(BookingStatus.CANCELLED, bookingId, null);
         }
 
-        // фаза 2: вызов платёжки БЕЗ транзакции — connection pool свободен
         PaymentResponse paymentResponse;
         try {
             paymentResponse = paymentExecutor.executePayment(paymentRequest);
         } catch (Exception e) {
-            log.error("Ошибка платёжного сервиса для bookingId={}: {}", bookingId, e.getMessage());
-            throw new InternalException(Error.INTERNAL_ERROR, "Ошибка платёжного сервиса: " + e.getMessage());
+            log.error("Payment service error for bookingId={}: {}", bookingId, e.getMessage());
+            booking.setStatus(BookingStatus.CANCELLED);
+            bookingRepository.save(booking);
+            return new BookingConfirmResponse(BookingStatus.CANCELLED, bookingId, null);
         }
 
-        // фаза 3: короткая транзакция — сохраняем результат, получаем актуальную сущность
-        BookingEntity updated = paymentProcessingService.savePaymentResult(bookingId, paymentResponse);
-
-        // уведомление только если платёж прошёл успешно
-        if (updated.getStatus() == BookingStatus.CONFIRMED) {
+        BookingEntity updated = paymentResultHandlerService.handle(booking, paymentResponse);
+        if (updated.getStatus() == BookingStatus.PAID) {
             notificationProcessorService.process(updated);
         }
+        bookingRepository.save(booking);
 
         return new BookingConfirmResponse(updated.getStatus(), bookingId, paymentResponse.id());
     }
 
+    @Override
+    public BookingResponse cancel(Long bookingId) {
+        BookingEntity booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND, "id=" + bookingId));
+        booking.setStatus(BookingStatus.CANCELLED);
+        BookingEntity updated = bookingRepository.save(booking);
+        return bookingMapper.toResponse(updated);
+    }
 
     @Override
     public BookingResponse getById(Long id, Currency currency) {
@@ -141,33 +160,11 @@ public class BookingServiceImpl implements BookingService {
             .map(r -> bookingMapper.withConvertedPrices(r, currency, currencyConverterService));
     }
 
-    private BookingEntity buildBooking(BookingCreateRequest request, RoomEntity room,
-                                       GuestEntity mainGuest, Set<GuestEntity> additionalGuests,
-                                       long nights) {
-        LocalDateTime now = LocalDateTime.now();
-        return BookingEntity.builder()
-            .city(room.getHotel().getCity())
-            .hotel(room.getHotel())
-            .room(room)
-            .mainGuest(mainGuest)
-            .additionalGuests(additionalGuests)
-            .checkInDate(request.checkInDate())
-            .checkOutDate(request.checkOutDate())
-            .status(BookingStatus.HOLD)
-            .pricePerNight(room.getPricePerNight())
-            .totalPrice(bookingPriceService.calculate(room, nights))
-            .createdAt(now)
-            .updatedAt(now)
-            .build();
-    }
-
-    // поиск бронирования по идентификатору или выброс исключения
     private BookingEntity findById(Long id) {
         return bookingRepository.findById(id)
             .orElseThrow(() -> new NotFoundException(Error.BOOKING_NOT_FOUND, "id=" + id));
     }
 
-    // поиск комнаты по цепочке город -> отель -> комната с блокировкой (pessimistic lock)
     private RoomEntity findRoomWithLock(Long cityId, Long hotelId, Long roomId) {
         return roomRepository.findByIdAndHotelIdAndCityIdWithLock(roomId, hotelId, cityId)
             .orElseThrow(() -> new NotFoundException(Error.ROOM_NOT_FOUND,

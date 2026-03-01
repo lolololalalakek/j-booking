@@ -7,9 +7,6 @@ import uz.stajirovka.jbooking.dto.response.RoomResponse;
 
 public interface RoomService {
 
-    RoomResponse getById(Long id, Currency currency);
+    Slice<RoomResponse> getByHotelId(long cityId, long hotelId, Currency currency, Pageable pageable);
 
-    Slice<RoomResponse> getByHotelId(Long hotelId, Currency currency, Pageable pageable);
-
-    RoomResponse updatePrice(Long id, Long newPrice);
 }

@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.\\\\gradlew.bat compileJava:*)",
+      "Bash(./gradlew compileJava:*)",
+      "Bash(./gradlew build:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(del \"D:\\\\j-booking\\\\src\\\\main\\\\java\\\\uz\\\\stajirovka\\\\jbooking\\\\controller\\\\GuestController.java\")",
+      "Bash(grep:*)",
+      "Bash(git checkout:*)",
+      "Bash(python:*)",
+      "Bash(./gradlew clean build:*)",
+      "Bash(./gradlew dependencies:*)",
+      "Bash(jar tf:*)",
+      "Bash(python3 -c \"import zipfile; z=zipfile.ZipFile\\(''/c/Users/user/.gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-flyway/4.0.2/1072163a4b17fabb5aa45bfb5a80e005fae3353f/spring-boot-flyway-4.0.2.jar''\\); [print\\(n\\) for n in z.namelist\\(\\) if ''Strategy'' in n or ''strategy'' in n]\")",
+      "Bash(unzip:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)"
+    ]
+  }
+}

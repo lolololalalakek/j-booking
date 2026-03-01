@@ -21,7 +21,7 @@ public class NotifciationFeignConfiguration {
 
     private String encode() {
         String authToken = String.format("%s:%s", notificationProperties.getLogin(), notificationProperties.getPassword());
-        return Base64.getEncoder().encodeToString(authToken.getBytes());
+        return "Basic " + Base64.getEncoder().encodeToString(authToken.getBytes());
     }
 
 

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import uz.stajirovka.jbooking.constant.enums.Error;
 import uz.stajirovka.jbooking.dto.response.CityResponse;
 import uz.stajirovka.jbooking.entity.CityEntity;
@@ -15,7 +14,6 @@ import uz.stajirovka.jbooking.service.CityService;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class CityServiceImpl implements CityService {
 
     private final CityRepository cityRepository;

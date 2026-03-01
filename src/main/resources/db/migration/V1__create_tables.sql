@@ -1,5 +1,5 @@
 -- =====================================================
--- ТАБЛИЦЫ
+-- TABLES
 -- =====================================================
 
 -- cities
@@ -17,14 +17,16 @@ CREATE TABLE cities
 CREATE TABLE hotels
 (
     id                 BIGSERIAL PRIMARY KEY,
-    city_id            BIGINT             NOT NULL REFERENCES cities (id),
-    name               VARCHAR(255)       NOT NULL,
+    city_id            BIGINT       NOT NULL REFERENCES cities (id),
+    name               VARCHAR(255) NOT NULL,
     description        VARCHAR(1000),
     stars              INTEGER CHECK (stars >= 1 AND stars <= 5),
-    accommodation_type accommodation_type NOT NULL,
-    created_at         TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at         TIMESTAMP
+    accommodation_type VARCHAR(50)  NOT NULL,
+    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at         TIMESTAMP,
+    CONSTRAINT hotels_accommodation_type_chk
+        CHECK (accommodation_type = ANY (ARRAY ['HOTEL', 'APARTMENT', 'HOSTEL', 'HOUSE', 'VILLA']::VARCHAR[]))
 );
 
 -- rooms
@@ -33,22 +35,28 @@ CREATE TABLE rooms
     id              BIGSERIAL PRIMARY KEY,
     hotel_id        BIGINT      NOT NULL REFERENCES hotels (id),
     room_number     VARCHAR(50) NOT NULL,
-    room_type       room_type   NOT NULL,
-    meal_plan       meal_plan   NOT NULL,
+    room_type       VARCHAR(50) NOT NULL,
+    meal_plan       VARCHAR(50) NOT NULL,
     capacity        INTEGER     NOT NULL,
     price_per_night BIGINT      NOT NULL,
     description     VARCHAR(500),
     created_at      TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at      TIMESTAMP
+    deleted_at      TIMESTAMP,
+    CONSTRAINT rooms_room_type_chk
+        CHECK (room_type = ANY (ARRAY ['STANDARD', 'SEMI_LUXE', 'LUXE', 'SUITE', 'PRESIDENTIAL']::VARCHAR[])),
+    CONSTRAINT rooms_meal_plan_chk
+        CHECK (meal_plan = ANY (ARRAY ['ROOM_ONLY', 'BREAKFAST', 'HALF_BOARD', 'FULL_BOARD', 'ALL_INCLUSIVE']::VARCHAR[]))
 );
 
 -- room_amenities
 CREATE TABLE room_amenities
 (
-    room_id BIGINT  NOT NULL REFERENCES rooms (id) ON DELETE CASCADE,
-    amenity amenity NOT NULL,
-    PRIMARY KEY (room_id, amenity)
+    room_id BIGINT      NOT NULL REFERENCES rooms (id) ON DELETE CASCADE,
+    amenity VARCHAR(50) NOT NULL,
+    PRIMARY KEY (room_id, amenity),
+    CONSTRAINT room_amenities_amenity_chk
+        CHECK (amenity = ANY (ARRAY ['WIFI', 'AIR_CONDITIONING', 'TV', 'MINI_BAR', 'SAFE']::VARCHAR[]))
 );
 
 -- room_price_history
@@ -79,20 +87,23 @@ CREATE TABLE guests
 CREATE TABLE bookings
 (
     id              BIGSERIAL PRIMARY KEY,
-    city_id         BIGINT         NOT NULL REFERENCES cities (id),
-    hotel_id        BIGINT         NOT NULL REFERENCES hotels (id),
-    room_id         BIGINT         NOT NULL REFERENCES rooms (id),
-    main_guest_id   BIGINT         NOT NULL REFERENCES guests (id),
-    check_in_date   TIMESTAMP      NOT NULL,
-    check_out_date  TIMESTAMP      NOT NULL,
-    status          booking_status NOT NULL,
-    price_per_night BIGINT         NOT NULL,
+    city_id         BIGINT      NOT NULL REFERENCES cities (id),
+    hotel_id        BIGINT      NOT NULL REFERENCES hotels (id),
+    room_id         BIGINT      NOT NULL REFERENCES rooms (id),
+    main_guest_id   BIGINT      NOT NULL REFERENCES guests (id),
+    check_in_date   TIMESTAMP   NOT NULL,
+    check_out_date  TIMESTAMP   NOT NULL,
+    status          VARCHAR(50) NOT NULL,
+    price_per_night BIGINT      NOT NULL,
     total_price     BIGINT,
     payment_id      BIGINT,
     notification_id BIGINT,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at      TIMESTAMP
+    total_guests    INT         NOT NULL,
+    created_at      TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at      TIMESTAMP,
+    CONSTRAINT bookings_status_chk
+        CHECK (status = ANY (ARRAY ['HOLD', 'CONFIRMED', 'PAID', 'CANCELLED']::VARCHAR[]))
 );
 
 -- booking_additional_guests
@@ -103,13 +114,13 @@ CREATE TABLE booking_additional_guests
     PRIMARY KEY (booking_id, guest_id)
 );
 
--- payment_transactions (аудит-лог платежей)
+-- payment_transactions (payment audit log)
 CREATE TABLE payment_transactions
 (
     id                     BIGSERIAL PRIMARY KEY,
     transaction_id         BIGINT      NOT NULL,
     booking_id             BIGINT      NOT NULL REFERENCES bookings (id),
-    reference_id           BIGINT      NOT NULL,
+    reference_id           UUID      NOT NULL,
     status                 VARCHAR(50) NOT NULL,
     amount                 BIGINT      NOT NULL,
     currency               VARCHAR(10) NOT NULL,
@@ -127,5 +138,3 @@ CREATE TABLE hotel_reviews
     description VARCHAR(2000),
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
-

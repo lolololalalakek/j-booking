@@ -27,6 +27,19 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     clean-disabled: false
+  cloud:
+    openfeign:
+      client:
+        config:
+          paymentClient:
+            url: http://localhost:7070
+            connectTimeout: 5000 #ожидание подключения к внешнему сервису
+            readTimeout: 15000  #подключен к сервису, время ожидания ответа от сервиса
+          notificationClient:
+            url: http://217.29.121.129/notification_api
+            connectTimeout: 5000
+            readTimeout: 15000
+
 
 # бизнес-параметры бронирования
 booking:
@@ -56,15 +69,7 @@ springdoc:
     operations-sorter: alpha
   api-docs:
     path: /v3/api-docs
-
 client:
-  payment:
-    url: http://localhost:7071
   notification:
-    url: https://http://217.29.121.129/notification_api
     login: but3r
     password: zwm1nja3nwqtnjiyyy
-spring.cloud.openfeign.client.config:
-  paymentClient:
-    connect-timeout: 5000
-    read-timeout: 15000

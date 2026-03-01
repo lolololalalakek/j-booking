@@ -36,7 +36,7 @@ public class HotelReviewController {
 
     @GetMapping
     public ResponseEntity<HotelReviewsResponse> getByHotelId(@PathVariable @Positive Long hotelId,
-                                                              Pageable pageable) {
+                                                             Pageable pageable) {
         return ResponseEntity.ok(reviewService.getByHotelId(hotelId, pageable));
     }
 

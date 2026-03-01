@@ -30,6 +30,8 @@ public class HoldExpirationService {
                 booking.getId(), booking.getCreatedAt());
         }
 
+        bookingRepository.saveAll(slice.getContent());
+
         return slice;
     }
 }

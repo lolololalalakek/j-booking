@@ -30,7 +30,7 @@ public class CurrencyConverterServiceImpl implements CurrencyConverterService {
 
     private long divide(long amount, long rate) {
         return BigDecimal.valueOf(amount)
-                .divide(BigDecimal.valueOf(rate), 0, RoundingMode.HALF_UP)
-                .longValue();
+            .divide(BigDecimal.valueOf(rate), 0, RoundingMode.HALF_UP)
+            .longValue();
     }
 }

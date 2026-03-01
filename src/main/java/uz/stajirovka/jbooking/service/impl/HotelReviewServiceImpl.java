@@ -24,7 +24,6 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class HotelReviewServiceImpl implements HotelReviewService {
 
     private final HotelReviewRepository reviewRepository;
@@ -43,12 +42,7 @@ public class HotelReviewServiceImpl implements HotelReviewService {
         HotelEntity hotel = findHotelById(hotelId);
         GuestEntity guest = findGuestById(request.guestId());
 
-        HotelReviewEntity entity = new HotelReviewEntity();
-        entity.setHotel(hotel);
-        entity.setGuest(guest);
-        entity.setRating(request.rating());
-        entity.setDescription(request.description());
-        entity.setCreatedAt(LocalDateTime.now());
+        HotelReviewEntity entity = hotelReviewMapper.toEntity(request, hotel, guest, LocalDateTime.now());
 
         return hotelReviewMapper.toResponse(reviewRepository.save(entity));
     }

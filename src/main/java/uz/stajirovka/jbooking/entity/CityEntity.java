@@ -15,21 +15,19 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "cities")
-@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class    CityEntity {
+public class CityEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
