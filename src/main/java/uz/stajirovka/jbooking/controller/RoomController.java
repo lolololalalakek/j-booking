@@ -1,5 +1,6 @@
 package uz.stajirovka.jbooking.controller;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,8 @@ public class RoomController {
     private final RoomService roomService;
 
     @GetMapping
-    public ResponseEntity<Slice<RoomResponse>> findRooom(@RequestParam @Positive long cityId,
-                                                         @RequestParam @Positive long hotelId,
+    public ResponseEntity<Slice<RoomResponse>> findRooom(@RequestParam @NotNull @Positive long cityId,
+                                                         @RequestParam @NotNull @Positive long hotelId,
                                                          @RequestParam(defaultValue = "UZS") Currency currency,
                                                          @RequestParam(defaultValue = "0") @PositiveOrZero int pageNumber,
                                                          @RequestParam(defaultValue = "10") @Positive int pageSize) {

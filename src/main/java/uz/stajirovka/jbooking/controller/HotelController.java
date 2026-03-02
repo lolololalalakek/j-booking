@@ -42,7 +42,7 @@ public class HotelController {
         @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime checkInDate,
         @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime checkOutDate,
         @RequestParam(defaultValue = "2") @Positive Integer guests,
-        @RequestParam(required = false) @Positive Long cityId,
+        @RequestParam @NotNull @Positive Long cityId,
         @RequestParam(required = false) @PositiveOrZero Long minPrice,
         @RequestParam(required = false) @PositiveOrZero Long maxPrice,
         @RequestParam(required = false) @Min(1) @Max(5) Integer minStars,
