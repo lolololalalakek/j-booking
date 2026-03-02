@@ -1,0 +1,285 @@
+{
+  "info": {
+    "name": "J-Booking API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "cityId", "value": "1" },
+    { "key": "hotelId", "value": "1" },
+    { "key": "roomId", "value": "1" },
+    { "key": "bookingId", "value": "1" },
+    { "key": "reviewId", "value": "1" },
+    { "key": "guestId", "value": "1" },
+    { "key": "pinfl", "value": "12345678901234" }
+  ],
+  "item": [
+    {
+      "name": "Города",
+      "item": [
+        {
+          "name": "Получить список городов",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cities?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cities"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Отели",
+      "item": [
+        {
+          "name": "Получить отели по городу",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/hotels?cityId={{cityId}}&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "hotels"],
+              "query": [
+                { "key": "cityId", "value": "{{cityId}}" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Поиск отелей с фильтрами",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/hotels/search?checkInDate=2026-09-01T14:00:00&checkOutDate=2026-09-05T12:00:00&guests=2&cityId={{cityId}}&minPrice=100000&maxPrice=500000&minStars=4&amenities=WIFI&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "hotels", "search"],
+              "query": [
+                { "key": "checkInDate", "value": "2026-09-01T14:00:00" },
+                { "key": "checkOutDate", "value": "2026-09-05T12:00:00" },
+                { "key": "guests", "value": "2" },
+                { "key": "cityId", "value": "{{cityId}}" },
+                { "key": "minPrice", "value": "100000" },
+                { "key": "maxPrice", "value": "500000" },
+                { "key": "minStars", "value": "4" },
+                { "key": "amenities", "value": "WIFI" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Номера",
+      "item": [
+        {
+          "name": "Получить номера отеля",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms?cityId={{cityId}}&hotelId={{hotelId}}&currency=UZS&pageNumber=0&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms"],
+              "query": [
+                { "key": "cityId", "value": "{{cityId}}" },
+                { "key": "hotelId", "value": "{{hotelId}}" },
+                { "key": "currency", "value": "UZS" },
+                { "key": "pageNumber", "value": "0" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Отзывы об отеле",
+      "item": [
+        {
+          "name": "Получить отзывы об отеле",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/hotels/{{hotelId}}/reviews?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "hotels", "{{hotelId}}", "reviews"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Бронирование",
+      "item": [
+        {
+          "name": "Создать бронирование",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookings"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cityId\": 1,\n  \"hotelId\": 1,\n  \"roomId\": 1,\n  \"checkInDate\": \"2026-09-01T14:00:00\",\n  \"checkOutDate\": \"2026-09-05T12:00:00\",\n  \"mainGuest\": {\n    \"firstName\": \"Osamu\",\n    \"lastName\": \"Dazai\",\n    \"pinfl\": \"12345678901234\",\n    \"email\": \"osamu.dazai@mail.jp\",\n    \"phone\": \"+81901112233\"\n  },\n  \"additionalGuests\": [\n    {\n      \"firstName\": \"\",\n      \"lastName\": \"\",\n      \"pinfl\": \"\",\n      \"email\": \"\",\n      \"phone\": \"\"\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Подтвердить бронирование",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookings", "confirm"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": {{bookingId}}\n}"
+            }
+          }
+        },
+        {
+          "name": "Оплатить бронирование",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings/pay",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookings", "pay"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": {{bookingId}},\n  \"amount\": 600000,\n  \"currency\": \"UZS\",\n  \"senderName\": \"Osamu Dazai\",\n  \"senderToken\": \"sender-token-123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Личный кабинет",
+      "item": [
+        {
+          "name": "Мои бронирования",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings/my?pinfl={{pinfl}}&currency=UZS&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookings", "my"],
+              "query": [
+                { "key": "pinfl", "value": "{{pinfl}}" },
+                { "key": "currency", "value": "UZS" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Получить бронирование по ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}?currency=UZS",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookings", "{{bookingId}}"],
+              "query": [{ "key": "currency", "value": "UZS" }]
+            }
+          }
+        },
+        {
+          "name": "Информация о возврате",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/refund-info",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookings", "{{bookingId}}", "refund-info"]
+            }
+          }
+        },
+        {
+          "name": "Отменить бронирование",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "bookings", "{{bookingId}}", "cancel"]
+            }
+          }
+        },
+        {
+          "name": "Оставить отзыв",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/hotels/{{hotelId}}/reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "hotels", "{{hotelId}}", "reviews"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guestId\": 1,\n  \"rating\": 5,\n  \"description\": \"Great hotel\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Удалить отзыв",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/hotels/{{hotelId}}/reviews/{{reviewId}}?mainGuestId={{guestId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "hotels", "{{hotelId}}", "reviews", "{{reviewId}}"],
+              "query": [
+                { "key": "mainGuestId", "value": "{{guestId}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Админ",
+      "item": [
+        {
+          "name": "Обновить цену номера",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/update-room-price",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "update-room-price"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomId\": {{roomId}},\n  \"newPricePerNight\": 250000\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
