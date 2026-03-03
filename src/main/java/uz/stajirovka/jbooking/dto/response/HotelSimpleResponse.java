@@ -2,7 +2,7 @@ package uz.stajirovka.jbooking.dto.response;
 
 import uz.stajirovka.jbooking.constant.enums.AccommodationType;
 
-public record HotelResponse(
+public record HotelSimpleResponse(
     Long id,
     Long cityId,
     String cityName,

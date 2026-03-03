@@ -41,6 +41,7 @@
           "name": "Получить отели по городу",
           "request": {
             "method": "GET",
+            "description": "Возвращает список отелей по cityId (HotelSimpleResponse). Комнаты не включаются — для получения комнат используйте GET /api/v1/rooms.",
             "url": {
               "raw": "{{baseUrl}}/api/v1/hotels?cityId={{cityId}}&page=0&size=20",
               "host": ["{{baseUrl}}"],
@@ -57,6 +58,7 @@
           "name": "Поиск отелей с фильтрами",
           "request": {
             "method": "GET",
+            "description": "Поиск доступных отелей по датам, гостям, цене, звёздам и удобствам (HotelResponse). Комнаты не включаются — для получения доступных комнат конкретного отеля используйте GET /api/v1/rooms.",
             "url": {
               "raw": "{{baseUrl}}/api/v1/hotels/search?checkInDate=2026-09-01T14:00:00&checkOutDate=2026-09-05T12:00:00&guests=2&cityId={{cityId}}&minPrice=100000&maxPrice=500000&minStars=4&amenities=WIFI&page=0&size=20",
               "host": ["{{baseUrl}}"],
@@ -85,6 +87,7 @@
           "name": "Получить номера отеля",
           "request": {
             "method": "GET",
+            "description": "Возвращает список номеров конкретного отеля. Используется после получения hotelId из /hotels или /hotels/search.",
             "url": {
               "raw": "{{baseUrl}}/api/v1/rooms?cityId={{cityId}}&hotelId={{hotelId}}&currency=UZS&pageNumber=0&pageSize=10",
               "host": ["{{baseUrl}}"],

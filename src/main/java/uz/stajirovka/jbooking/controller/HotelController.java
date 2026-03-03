@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uz.stajirovka.jbooking.constant.enums.Amenity;
 import uz.stajirovka.jbooking.dto.response.HotelResponse;
+import uz.stajirovka.jbooking.dto.response.HotelSimpleResponse;
 import uz.stajirovka.jbooking.service.HotelService;
 
 import java.time.LocalDateTime;
@@ -32,8 +33,8 @@ public class HotelController {
     private final HotelService hotelService;
 
     @GetMapping
-    public ResponseEntity<Slice<HotelResponse>> getByCityId(@RequestParam @Positive Long cityId,
-                                                            Pageable pageable) {
+    public ResponseEntity<Slice<HotelSimpleResponse>> getByCityId(@RequestParam @Positive Long cityId,
+                                                                  Pageable pageable) {
         return ResponseEntity.ok(hotelService.getByCityId(cityId, pageable));
     }
 
@@ -43,7 +44,7 @@ public class HotelController {
         @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime checkOutDate,
         @RequestParam(defaultValue = "2") @Positive Integer guests,
         @RequestParam @NotNull @Positive Long cityId,
-        @RequestParam(required = false) @PositiveOrZero Long minPrice,
+        @RequestParam @NotNull @PositiveOrZero Long minPrice,
         @RequestParam(required = false) @PositiveOrZero Long maxPrice,
         @RequestParam(required = false) @Min(1) @Max(5) Integer minStars,
         @RequestParam(required = false) @Size(min = 1) Set<Amenity> amenities,

@@ -41,7 +41,9 @@ public final class HotelSpecifications {
             predicates.add(cb.isNull(root.get("deletedAt")));
 
             // если передан город — фильтрую по нему
-            predicates.add(cb.equal(root.get("city").get("id"), cityId));
+            if (cityId != null) {
+                predicates.add(cb.equal(root.get("city").get("id"), cityId));
+            }
 
             // если задан минимальный рейтинг звёзд — фильтрую по нему
             if (minStars != null) {

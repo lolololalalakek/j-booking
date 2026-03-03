@@ -1,8 +1,4 @@
-﻿-- =====================================================
--- РўР•РЎРўРћР’Р«Р• Р”РђРќРќР«Р•
--- =====================================================
-
--- cities
+﻿-- cities
 INSERT INTO cities (name, country)
 VALUES ('Ташкент', 'Узбекистан'),
        ('Самарканд', 'Узбекистан'),
@@ -201,10 +197,6 @@ INSERT INTO room_amenities (room_id, amenity)
 SELECT r.id, 'SAFE' FROM rooms r
 WHERE r.hotel_id IN (2, 3, 4, 5) AND r.room_type = 'PRESIDENTIAL';
 
--- =====================================================
--- room_price_history
--- =====================================================
-INSERT INTO room_price_history (room_id, price_per_night, valid_from)
-SELECT id, price_per_night, created_at FROM rooms;
+
 
 

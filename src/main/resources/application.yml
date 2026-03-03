@@ -70,11 +70,6 @@ springdoc:
   api-docs:
     path: /v3/api-docs
 
-vaadin:
-  devmode:
-    usageStatistics:
-      enabled: false
-
 client:
   notification:
     login: but3r

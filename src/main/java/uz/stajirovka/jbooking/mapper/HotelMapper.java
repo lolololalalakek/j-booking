@@ -2,9 +2,8 @@ package uz.stajirovka.jbooking.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.springframework.data.domain.Slice;
 import uz.stajirovka.jbooking.dto.response.HotelResponse;
-import uz.stajirovka.jbooking.dto.response.RoomResponse;
+import uz.stajirovka.jbooking.dto.response.HotelSimpleResponse;
 import uz.stajirovka.jbooking.entity.CityEntity;
 import uz.stajirovka.jbooking.entity.HotelEntity;
 
@@ -18,7 +17,15 @@ public interface HotelMapper {
     @Mapping(source = "entity.accommodationType", target = "accommodationType")
     @Mapping(source = "city.id", target = "cityId")
     @Mapping(source = "city.name", target = "cityName")
-    @Mapping(source = "rooms", target = "rooms")
-    HotelResponse toResponse(HotelEntity entity, CityEntity city, Slice<RoomResponse> rooms);
+    HotelResponse toResponse(HotelEntity entity, CityEntity city);
+
+    @Mapping(source = "entity.id", target = "id")
+    @Mapping(source = "entity.name", target = "name")
+    @Mapping(source = "entity.description", target = "description")
+    @Mapping(source = "entity.stars", target = "stars")
+    @Mapping(source = "entity.accommodationType", target = "accommodationType")
+    @Mapping(source = "city.id", target = "cityId")
+    @Mapping(source = "city.name", target = "cityName")
+    HotelSimpleResponse toSimpleResponse(HotelEntity entity, CityEntity city);
 
 }

@@ -6,7 +6,6 @@ plugins {
 }
 ext {
     springCloudVersion = "2025.1.0"
-    vaadinVersion = "25.0.3"
 }
 
 group = 'uz.stajirovka'
@@ -30,8 +29,6 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.vaadin:vaadin-spring-boot-starter'
-
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework:spring-aop'
     implementation 'org.aspectj:aspectjweaver'
@@ -51,7 +48,6 @@ dependencies {
 
     // DevTools
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    developmentOnly 'com.vaadin:vaadin-dev'
 
     // Core tests
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -78,7 +74,6 @@ dependencies {
 dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"
-        mavenBom "com.vaadin:vaadin-bom:$vaadinVersion"
     }
 }
 
