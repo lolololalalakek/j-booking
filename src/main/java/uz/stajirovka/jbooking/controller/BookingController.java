@@ -35,20 +35,17 @@ public class BookingController {
 
     @PostMapping
     public ResponseEntity<BookingResponse> create(@Valid @RequestBody BookingCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(bookingService.initBooking(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(bookingService.initBooking(request));
     }
 
     @PostMapping("/confirm")
     public ResponseEntity<BookingConfirmResponse> confirmBooking(@Valid @RequestBody BookingConfirmRequest request) {
-        return ResponseEntity.status(HttpStatus.OK)
-            .body(bookingService.confirmBooking(request));
+        return ResponseEntity.status(HttpStatus.OK).body(bookingService.confirmBooking(request));
     }
 
     @PostMapping("/pay")
     public ResponseEntity<BookingConfirmResponse> payConfirmedBooking(@Valid @RequestBody BookingPaymentRequest request) {
-        return ResponseEntity.status(HttpStatus.OK)
-            .body(bookingService.payConfirmedBooking(request));
+        return ResponseEntity.status(HttpStatus.OK).body(bookingService.payConfirmedBooking(request));
     }
 
     @GetMapping("/{id}")

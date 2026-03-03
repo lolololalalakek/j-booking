@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import uz.stajirovka.jbooking.constant.enums.Currency;
 import uz.stajirovka.jbooking.dto.response.RoomResponse;
 import uz.stajirovka.jbooking.mapper.RoomMapper;
@@ -22,7 +21,6 @@ public class RoomServiceImpl implements RoomService {
 
 
     @Override
-    @Transactional(readOnly = true)
     public Slice<RoomResponse> getByHotelId(long cityId, long hotelId, Currency currency, Pageable pageable) {
 
         return roomRepository.findByHotel_IdAndHotel_City_Id(hotelId, cityId, pageable)
