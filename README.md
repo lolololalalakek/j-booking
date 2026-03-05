@@ -67,17 +67,17 @@ J-Booking — REST API приложение для бронирования но
 
 ## Стек технологий
 
-| Компонент        | Технология                              |
-|------------------|-----------------------------------------|
-| Язык             | Java 21                                 |
-| Фреймворк        | Spring Boot 4.0.2                       |
-| База данных      | PostgreSQL                              |
-| Миграции БД      | Flyway                                  |
-| HTTP-клиент      | Spring Cloud OpenFeign                  |
-| Маппинг          | MapStruct                               |
-| Документация     | Swagger / OpenAPI (springdoc)           |
-| Шедулер          | Spring Scheduler + ShedLock             |
-| Тесты            | JUnit 5, H2 (in-memory)                 |
+| Компонент        | Технология                             |
+|------------------|----------------------------------------|
+| Язык             | Java 21                                |
+| Фреймворк        | Spring Boot 4.0.2                      |
+| База данных      | PostgreSQL                             |
+| Миграции БД      | Flyway                                 |
+| HTTP-клиент      | Spring Cloud OpenFeign                 |
+| Маппинг          | MapStruct                              |
+| Документация     | Swagger / OpenAPI (springdoc)          |
+| Шедулер          | Spring Scheduler            |
+| Тесты            | JUnit 5                |
 
 ---
 
